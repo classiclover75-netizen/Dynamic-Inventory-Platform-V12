@@ -3358,7 +3358,7 @@ function AppContent() {
                                         <td
                                           key={col.key}
                                           {...commonProps}
-                                          className={`p-1.5 border-r-[length:medium] border-b-[length:medium] border-[#e0e0e0] ${hoverClass} text-xs relative ${isCellEditing ? "!z-[99999]" : "overflow-hidden"}`}
+                                          className={`p-1.5 border-r-[length:medium] border-b-[length:medium] border-[#e0e0e0] ${hoverClass} text-xs relative ${isCellEditing ? "!z-[60]" : "overflow-hidden"}`}
                                         >
                                           <div className="flex flex-col gap-1 justify-center w-full h-full min-h-[20px] p-1.5">
                                             {totalSources.length > 0 ? (
