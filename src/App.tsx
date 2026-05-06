@@ -1875,6 +1875,49 @@ function AppContent() {
     }
   };
 
+  const handleApplySourceToAll = async (pageName: string, colKey: string, sourceName: string, sourceColor: string) => {
+    try {
+      const rows = state.pageRows[pageName] || [];
+      let hasChanges = false;
+      const updatedRows = rows.map(r => {
+        const arr = parseMultiSource(r[colKey]);
+        if (!arr.find((x: any) => x.source === sourceName)) {
+          arr.push({ source: sourceName, qty: 0, color: sourceColor });
+          hasChanges = true;
+          return { ...r, [colKey]: JSON.stringify(arr) };
+        }
+        return r;
+      });
+
+      if (!hasChanges) {
+        toast(`"${sourceName}" is already present in all rows.`);
+        return;
+      }
+
+      const res = await fetch(`/api/pageRows/${encodeURIComponent(pageName)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rows: updatedRows }),
+      });
+
+      if (!res.ok) throw new Error("Failed to update bulk sources");
+
+      setState((prev) => ({
+        ...prev,
+        pageRows: {
+          ...prev.pageRows,
+          [pageName]: updatedRows,
+        },
+      }));
+      
+      toast(`Added "${sourceName}" to all rows!`);
+    } catch (err: any) {
+      toast("Error applying source to all rows: " + err.message, {
+        style: { background: "red", color: "white" },
+      });
+    }
+  };
+
   const handleDeleteRow = async (rowId: string, pageName?: string) => {
     const targetPage = pageName || state.activePage;
 
@@ -4299,6 +4342,7 @@ function AppContent() {
       <AddRowModal
         isOpen={modals.addRow}
         onClose={closeAllModals}
+        onApplySourceToAll={handleApplySourceToAll}
         onBack={
           returnToImagePreview
             ? () => {

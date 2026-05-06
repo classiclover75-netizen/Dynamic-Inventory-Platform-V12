@@ -190,6 +190,7 @@ export const AddRowModal = React.memo(
     editingRowIndex,
     activePage,
     onToggleMagicPasteColumn,
+    onApplySourceToAll,
     setConfirmationModal,
     getImageUrl,
   }: {
@@ -204,6 +205,7 @@ export const AddRowModal = React.memo(
     editingRowIndex?: number;
     activePage: string;
     onToggleMagicPasteColumn?: (colKey: string) => void;
+    onApplySourceToAll?: (page: string, col: string, name: string, color: string) => void;
     setConfirmationModal: (
       modal: {
         isOpen: boolean;
@@ -769,7 +771,7 @@ export const AddRowModal = React.memo(
                                         />
                                         <button
                                           type="button"
-                                          className="text-red-500 font-bold px-1 hover:text-red-700 ml-auto"
+                                          className="text-red-500 font-bold px-1 hover:text-red-700 mx-1 flex-shrink-0"
                                           onClick={() => {
                                             const copy = currentSources.filter(
                                               (_: any, k: number) => k !== idx,
@@ -782,9 +784,20 @@ export const AddRowModal = React.memo(
                                                 : "",
                                             );
                                           }}
+                                          title="Delete Option"
                                         >
                                           X
                                         </button>
+                                        {onApplySourceToAll && (
+                                          <button
+                                            type="button"
+                                            className="ml-auto text-blue-600 hover:text-blue-800 flex items-center justify-center p-1 rounded hover:bg-blue-50 transition-colors shrink-0"
+                                            onClick={() => onApplySourceToAll(activePage, col.key, src.source, src.color)}
+                                            title="Apply to All Rows"
+                                          >
+                                            <Copy size={14} />
+                                          </button>
+                                        )}
                                       </div>
                                     ),
                                   )}
@@ -823,9 +836,12 @@ export const AddRowModal = React.memo(
                                   <Button
                                     type="button"
                                     variant="green"
-                                    className="h-7 text-[10px] px-2 py-0"
+                                    className="h-7 text-[10px] px-2 py-0 shrink-0"
                                     onClick={() => {
                                       if (newSourceInput.source) {
+                                        const usedColors = currentSources.map((item: any) => item.color);
+                                        const availableColors = RANDOM_COLORS.filter(c => !usedColors.includes(c));
+                                        const newColor = availableColors.length > 0 ? availableColors[Math.floor(Math.random() * availableColors.length)] : RANDOM_COLORS[Math.floor(Math.random() * RANDOM_COLORS.length)];
                                         const updated = [
                                           ...currentSources,
                                           {
@@ -833,7 +849,7 @@ export const AddRowModal = React.memo(
                                             qty:
                                               parseFloat(newSourceInput.qty) ||
                                               0,
-                                            color: getRandomColor(),
+                                            color: newColor,
                                           },
                                         ];
                                         handleUpdateField(
