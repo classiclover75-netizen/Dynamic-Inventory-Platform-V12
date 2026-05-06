@@ -3474,42 +3474,65 @@ function AppContent() {
                                               </div>
                                             </div>
                                           )}
-                                          <div
-                                            className="group flex flex-col gap-1 justify-center w-full h-full relative cursor-text min-h-[20px] p-1.5"
-                                            onClick={() =>
-                                              setInlineEdit({
-                                                id: `${row.id}-${col.key}`,
-                                                colKey: col.key,
-                                                val: rawVal
-                                                  ? String(rawVal)
-                                                  : JSON.stringify([]),
-                                                history: [],
-                                                historyPointer: 0,
-                                              })
-                                            }
-                                          >
+                                          <div className="flex flex-col gap-1 justify-center w-full h-full min-h-[20px] p-1.5">
                                             {currentVal.length > 0 ? (
                                               currentVal.map(
                                                 (s: any, idx: number) => (
-                                                  <div
-                                                    key={idx}
-                                                    className={`px-1.5 py-0.5 rounded text-[14px] font-bold border flex items-center gap-1 ${s.color}`}
-                                                  >
-                                                    <span className="opacity-70">
-                                                      {s.source}:
-                                                    </span>{" "}
-                                                    <span>{s.qty}</span>
+                                                  <div key={idx} className="group flex items-center justify-between gap-2">
+                                                    <div
+                                                      className={`px-1.5 py-0.5 rounded text-[14px] font-bold border flex items-center gap-1 ${s.color}`}
+                                                    >
+                                                      <span className="opacity-70">
+                                                        {s.source}:
+                                                      </span>{" "}
+                                                      <span>{s.qty}</span>
+                                                    </div>
+                                                    <button
+                                                      onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setInlineEdit({
+                                                          id: `${row.id}-${col.key}`,
+                                                          colKey: col.key,
+                                                          val: rawVal
+                                                            ? String(rawVal)
+                                                            : JSON.stringify([]),
+                                                          history: [],
+                                                          historyPointer: 0,
+                                                        });
+                                                      }}
+                                                      className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 bg-white text-gray-500 hover:text-blue-600 rounded p-1 shadow border w-6 h-6 flex items-center justify-center text-[10px] cursor-pointer"
+                                                      title="Edit sale"
+                                                    >
+                                                      ✏️
+                                                    </button>
                                                   </div>
                                                 ),
                                               )
                                             ) : (
-                                              <span className="text-gray-400 text-[14px] italic">
-                                                0
-                                              </span>
+                                              <div className="group flex items-center justify-between gap-2">
+                                                <span className="text-gray-400 text-[14px] italic">
+                                                  0
+                                                </span>
+                                                <button
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setInlineEdit({
+                                                      id: `${row.id}-${col.key}`,
+                                                      colKey: col.key,
+                                                      val: rawVal
+                                                        ? String(rawVal)
+                                                        : JSON.stringify([]),
+                                                      history: [],
+                                                      historyPointer: 0,
+                                                    });
+                                                  }}
+                                                  className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 bg-white text-gray-500 hover:text-blue-600 rounded p-1 shadow border w-6 h-6 flex items-center justify-center text-[10px] cursor-pointer"
+                                                  title="Edit sale"
+                                                >
+                                                  ✏️
+                                                </button>
+                                              </div>
                                             )}
-                                            <button className="hidden group-hover:block absolute right-1 top-1/2 -translate-y-1/2 bg-white text-gray-500 hover:text-blue-600 rounded px-1 shadow border py-0.5 text-[10px] z-10">
-                                              ✏️ Edit
-                                            </button>
                                           </div>
                                         </td>
                                       );
