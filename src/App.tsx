@@ -3311,10 +3311,40 @@ function AppContent() {
                                       );
                                     }
 
-                                    if (
-                                      col.key === "total_qty" ||
-                                      col.type === "sale_tracker"
-                                    ) {
+                                    if (col.key === "total_qty") {
+                                      const totalSources =
+                                        parseMultiSource(rawVal);
+                                      return (
+                                        <td
+                                          key={col.key}
+                                          {...commonProps}
+                                          className={`p-1.5 border-r-[length:medium] border-b-[length:medium] border-[#e0e0e0] ${hoverClass}`}
+                                        >
+                                          <div className="flex flex-wrap gap-1 justify-center items-center">
+                                            {totalSources.map(
+                                              (s: any, idx: number) => (
+                                                <div
+                                                  key={idx}
+                                                  className={`px-2 py-0.5 rounded text-[10px] font-bold border flex items-center gap-1 ${s.color}`}
+                                                >
+                                                  <span className="opacity-70">
+                                                    {s.source}:
+                                                  </span>{" "}
+                                                  <span>{s.qty}</span>
+                                                </div>
+                                              ),
+                                            )}
+                                            {totalSources.length === 0 && (
+                                              <span className="text-gray-400 text-xs italic">
+                                                0
+                                              </span>
+                                            )}
+                                          </div>
+                                        </td>
+                                      );
+                                    }
+
+                                    if (col.type === "sale_tracker") {
                                       const isEditing =
                                         inlineEdit?.id ===
                                         `${row.id}-${col.key}`;
@@ -3337,218 +3367,87 @@ function AppContent() {
                                                 e.stopPropagation()
                                               }
                                             >
-                                              {col.key === "total_qty" ? (
-                                                <div className="flex flex-col gap-2">
-                                                  <div className="font-bold text-gray-700 mb-1">
-                                                    Batch Sources (Total)
-                                                  </div>
-                                                  {currentVal.map(
-                                                    (src: any, idx: number) => (
+                                              <div className="flex flex-col gap-2">
+                                                <div className="font-bold text-gray-700 mb-1">
+                                                  Sales per Source
+                                                </div>
+                                                {totalSources.map(
+                                                  (src: any, idx: number) => {
+                                                    const currentSaleEntry =
+                                                      currentVal.find(
+                                                        (s: any) =>
+                                                          s.source ===
+                                                          src.source,
+                                                      );
+                                                    const saleQty =
+                                                      currentSaleEntry
+                                                        ? currentSaleEntry.qty
+                                                        : 0;
+                                                    return (
                                                       <div
                                                         key={idx}
-                                                        className="flex items-center gap-2 bg-gray-50 p-1 px-2 rounded"
+                                                        className="flex items-center gap-2 bg-gray-50 p-1 rounded justify-between px-2"
                                                       >
-                                                        <input
-                                                          type="text"
-                                                          value={src.source}
-                                                          onChange={(e) => {
-                                                            const copy = [
-                                                              ...currentVal,
-                                                            ];
-                                                            copy[idx].source =
-                                                              e.target.value;
-                                                            setInlineEdit(
-                                                              (prev) => ({
-                                                                ...prev!,
-                                                                val: JSON.stringify(
-                                                                  copy,
-                                                                ),
-                                                              }),
-                                                            );
-                                                          }}
-                                                          className="flex-1 w-20 border px-1 py-0.5 text-xs rounded"
-                                                        />
+                                                        <span
+                                                          className={`text-xs px-2 py-0.5 rounded font-bold border ${src.color}`}
+                                                        >
+                                                          {src.source}
+                                                        </span>
                                                         <input
                                                           type="number"
-                                                          value={src.qty}
+                                                          value={saleQty}
                                                           onChange={(e) => {
                                                             const copy = [
                                                               ...currentVal,
                                                             ];
-                                                            copy[idx].qty =
-                                                              parseFloat(
-                                                                e.target.value,
-                                                              ) || 0;
-                                                            setInlineEdit(
-                                                              (prev) => ({
-                                                                ...prev!,
-                                                                val: JSON.stringify(
-                                                                  copy,
-                                                                ),
-                                                              }),
-                                                            );
-                                                          }}
-                                                          className="w-16 border px-1 py-0.5 text-xs rounded"
-                                                        />
-                                                        <button
-                                                          onClick={() => {
-                                                            const copy =
-                                                              currentVal.filter(
-                                                                (
-                                                                  _: any,
-                                                                  i: number,
-                                                                ) => i !== idx,
+                                                            const existingIdx =
+                                                              copy.findIndex(
+                                                                (s: any) =>
+                                                                  s.source ===
+                                                                  src.source,
                                                               );
-                                                            setInlineEdit(
-                                                              (prev) => ({
-                                                                ...prev!,
-                                                                val: copy.length > 0 ? JSON.stringify(
-                                                                  copy,
-                                                                ) : "",
-                                                              }),
-                                                            );
-                                                          }}
-                                                          className="text-red-500 hover:text-red-700 font-bold px-1"
-                                                        >
-                                                          X
-                                                        </button>
-                                                      </div>
-                                                    ),
-                                                  )}
-                                                  <div className="flex items-center gap-2 mt-2 pt-2 border-t">
-                                                    <input
-                                                      id={`new-source-${row.id}`}
-                                                      placeholder="New source..."
-                                                      className="flex-1 border px-1 py-0.5 text-xs rounded"
-                                                    />
-                                                    <input
-                                                      id={`new-qty-${row.id}`}
-                                                      type="number"
-                                                      placeholder="Qty"
-                                                      className="w-16 border px-1 py-0.5 text-xs rounded"
-                                                    />
-                                                    <button
-                                                      onClick={() => {
-                                                        const srcInput =
-                                                          document.getElementById(
-                                                            `new-source-${row.id}`,
-                                                          ) as HTMLInputElement;
-                                                        const qtyInput =
-                                                          document.getElementById(
-                                                            `new-qty-${row.id}`,
-                                                          ) as HTMLInputElement;
-                                                        if (srcInput.value) {
-                                                          const copy = [
-                                                            ...currentVal,
-                                                            {
-                                                              source:
-                                                                srcInput.value,
-                                                              qty:
+                                                            if (
+                                                              existingIdx >= 0
+                                                            ) {
+                                                              copy[
+                                                                existingIdx
+                                                              ].qty =
                                                                 parseFloat(
-                                                                  qtyInput.value,
-                                                                ) || 0,
-                                                              color:
-                                                                getRandomColor(),
-                                                            },
-                                                          ];
-                                                          setInlineEdit(
-                                                            (prev) => ({
-                                                              ...prev!,
-                                                              val: JSON.stringify(
-                                                                copy,
-                                                              ),
-                                                            }),
-                                                          );
-                                                          srcInput.value = "";
-                                                          qtyInput.value = "";
-                                                        }
-                                                      }}
-                                                      className="bg-blue-600 text-white px-2 py-0.5 text-xs rounded font-bold"
-                                                    >
-                                                      Add
-                                                    </button>
-                                                  </div>
-                                                </div>
-                                              ) : (
-                                                <div className="flex flex-col gap-2">
-                                                  <div className="font-bold text-gray-700 mb-1">
-                                                    Sales per Source
-                                                  </div>
-                                                  {totalSources.map(
-                                                    (src: any, idx: number) => {
-                                                      const currentSaleEntry =
-                                                        currentVal.find(
-                                                          (s: any) =>
-                                                            s.source ===
-                                                            src.source,
-                                                        );
-                                                      const saleQty =
-                                                        currentSaleEntry
-                                                          ? currentSaleEntry.qty
-                                                          : 0;
-                                                      return (
-                                                        <div
-                                                          key={idx}
-                                                          className="flex items-center gap-2 bg-gray-50 p-1 rounded justify-between px-2"
-                                                        >
-                                                          <span
-                                                            className={`text-xs px-2 py-0.5 rounded font-bold border ${src.color}`}
-                                                          >
-                                                            {src.source}
-                                                          </span>
-                                                          <input
-                                                            type="number"
-                                                            value={saleQty}
-                                                            onChange={(e) => {
-                                                              const copy = [
-                                                                ...currentVal,
-                                                              ];
-                                                              const existingIdx =
-                                                                copy.findIndex(
-                                                                  (s: any) =>
-                                                                    s.source ===
-                                                                    src.source,
-                                                                );
-                                                              if (
-                                                                existingIdx >= 0
-                                                              ) {
-                                                                copy[
-                                                                  existingIdx
-                                                                ].qty =
+                                                                  e.target
+                                                                    .value,
+                                                                ) || 0;
+                                                            } else {
+                                                              copy.push({
+                                                                source:
+                                                                  src.source,
+                                                                qty:
                                                                   parseFloat(
                                                                     e.target
                                                                       .value,
-                                                                  ) || 0;
-                                                              } else {
-                                                                copy.push({
-                                                                  source:
-                                                                    src.source,
-                                                                  qty:
-                                                                    parseFloat(
-                                                                      e.target
-                                                                        .value,
-                                                                    ) || 0,
-                                                                  color:
-                                                                    src.color,
-                                                                });
-                                                              }
-                                                              setInlineEdit(
-                                                                (prev) => ({
-                                                                  ...prev!,
-                                                                  val: JSON.stringify(
-                                                                    copy,
-                                                                  ),
-                                                                }),
-                                                              );
-                                                            }}
-                                                            className="w-20 border px-1 py-0.5 text-right font-bold text-xs rounded text-blue-800"
-                                                          />
-                                                        </div>
-                                                      );
-                                                    },
-                                                  )}
-                                                </div>
-                                              )}
+                                                                  ) || 0,
+                                                                color:
+                                                                  src.color,
+                                                              });
+                                                            }
+                                                            setInlineEdit(
+                                                              (prev) => ({
+                                                                ...prev!,
+                                                                val: JSON.stringify(
+                                                                  copy,
+                                                                ),
+                                                              }),
+                                                            );
+                                                          }}
+                                                          onWheel={(e) =>
+                                                            e.currentTarget.blur()
+                                                          }
+                                                          className="w-20 border px-1 py-0.5 text-right font-bold text-xs rounded text-blue-800 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                        />
+                                                      </div>
+                                                    );
+                                                  },
+                                                )}
+                                              </div>
 
                                               <div className="flex items-center justify-end gap-2 mt-3 pt-2 border-t">
                                                 <button
@@ -5163,7 +5062,8 @@ function AppContent() {
               type="number"
               min="1"
               max="500"
-              className="w-full border border-gray-300 rounded p-2 text-sm mb-4"
+              onWheel={(e) => e.currentTarget.blur()}
+              className="w-full border border-gray-300 rounded p-2 text-sm mb-4 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               value={tempHistoryLimit}
               onChange={(e) => setTempHistoryLimit(Number(e.target.value))}
             />
