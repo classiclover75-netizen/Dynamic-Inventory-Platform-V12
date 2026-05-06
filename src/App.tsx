@@ -3358,7 +3358,7 @@ function AppContent() {
                                         <td
                                           key={col.key}
                                           {...commonProps}
-                                          className={`p-1.5 border-r-[length:medium] border-b-[length:medium] border-[#e0e0e0] ${hoverClass} text-xs relative overflow-hidden`}
+                                          className={`p-1.5 border-r-[length:medium] border-b-[length:medium] border-[#e0e0e0] ${hoverClass} text-xs relative ${isCellEditing ? "z-50" : "overflow-hidden"}`}
                                         >
                                           <div className="flex flex-col gap-1 justify-center w-full h-full min-h-[20px] p-1.5">
                                             {totalSources.length > 0 ? (
@@ -3372,10 +3372,38 @@ function AppContent() {
 
                                                   return (
                                                     <div key={idx} className="w-full relative">
-                                                      {isThisRowEditing ? (
-                                                        <div className={`w-full px-1.5 py-1.5 rounded text-[14px] font-bold border flex flex-col gap-2 ${ts.color}`}>
-                                                          <div className="flex items-center justify-between gap-1">
-                                                            <span className="opacity-70">{ts.source}:</span>
+                                                      <div className={`group w-full px-1.5 py-0.5 rounded text-[14px] font-bold border flex items-center justify-between gap-1 ${ts.color}`}>
+                                                        <div className="flex items-center justify-between w-full">
+                                                          <span className="opacity-70 shrink-0">{ts.source}:</span>
+                                                          <span className="flex-1 text-right">{saleQty}</span>
+                                                        </div>
+                                                        <button
+                                                          onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setInlineEdit({
+                                                              id: `${row.id}-${col.key}-${ts.source}`,
+                                                              colKey: col.key,
+                                                              val: rawVal ? String(rawVal) : JSON.stringify([]),
+                                                              history: [],
+                                                              historyPointer: 0,
+                                                            });
+                                                          }}
+                                                          className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 bg-white/60 hover:bg-white text-gray-700 rounded p-1 shadow-sm border border-black/10 w-6 h-6 flex items-center justify-center text-[10px] cursor-pointer ml-1"
+                                                          title="Edit sale"
+                                                        >
+                                                          ✏️
+                                                        </button>
+                                                      </div>
+
+                                                      {isThisRowEditing && (
+                                                        <div 
+                                                          className="absolute z-[9999] top-1/2 -translate-y-1/2 right-0 bg-white p-3 rounded-lg shadow-[0_5px_20px_rgba(0,0,0,0.3)] border-[3px] flex flex-col gap-4 min-w-[240px]"
+                                                          style={{ borderColor: ts.color?.includes('blue') ? '#3b82f6' : ts.color?.includes('green') ? '#22c55e' : ts.color?.includes('yellow') ? '#eab308' : ts.color?.includes('red') ? '#ef4444' : ts.color?.includes('purple') ? '#a855f7' : '#94a3b8' }}
+                                                          onClick={(e) => e.stopPropagation()}
+                                                        >
+                                                          <div className="font-bold text-gray-700 text-[14px]">Edit Sale for {ts.source}</div>
+                                                          <div className="flex items-center justify-between gap-2 border-b pb-3">
+                                                            <span className={`px-2 py-1 rounded text-[15px] font-bold border ${ts.color}`}>{ts.source}</span>
                                                             <input
                                                               type="number"
                                                               value={saleQty === 0 ? "" : saleQty}
@@ -3397,54 +3425,29 @@ function AppContent() {
                                                                 setTimeout(() => e.target.select(), 0);
                                                               }}
                                                               autoFocus
-                                                              className="w-16 bg-white/70 border border-black/20 px-1 py-0.5 text-right font-bold text-[14px] rounded text-blue-800 outline-none focus:border-blue-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                              className="w-24 bg-gray-50 border border-gray-300 px-2 py-1 text-right font-bold text-[16px] rounded text-blue-800 outline-none focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-100 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                                             />
                                                           </div>
-                                                          <div className="flex items-center justify-end gap-1 flex-shrink-0 w-full overflow-hidden">
-                                                            <button
-                                                              onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleSaveInlineEdit(activePage!, row.id, col.key, inlineEdit!.val);
-                                                              }}
-                                                              className="bg-green-600 hover:bg-green-700 text-white rounded px-2 py-0.5 shadow-sm border border-green-800 text-xs font-semibold cursor-pointer transition-colors"
-                                                              title="Save"
-                                                            >
-                                                              Save
-                                                            </button>
+                                                          <div className="flex items-center justify-end gap-3 pt-1">
                                                             <button
                                                               onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 setInlineEdit(null);
                                                               }}
-                                                              className="bg-red-500 hover:bg-red-600 text-white rounded px-2 py-0.5 shadow-sm border border-red-800 text-xs font-semibold cursor-pointer transition-colors"
-                                                              title="Cancel"
+                                                              className="text-gray-500 hover:text-gray-800 px-3 py-1.5 text-sm font-bold transition-colors"
                                                             >
                                                               Cancel
                                                             </button>
+                                                            <button
+                                                              onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleSaveInlineEdit(activePage!, row.id, col.key, inlineEdit!.val);
+                                                              }}
+                                                              className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded px-5 py-1.5 text-sm font-bold shadow-md transition-colors"
+                                                            >
+                                                              Save
+                                                            </button>
                                                           </div>
-                                                        </div>
-                                                      ) : (
-                                                        <div className={`group w-full px-1.5 py-0.5 rounded text-[14px] font-bold border flex items-center justify-between gap-1 ${ts.color}`}>
-                                                          <div className="flex items-center justify-between w-full">
-                                                            <span className="opacity-70 shrink-0">{ts.source}:</span>
-                                                            <span className="flex-1 text-right">{saleQty}</span>
-                                                          </div>
-                                                          <button
-                                                            onClick={(e) => {
-                                                              e.stopPropagation();
-                                                              setInlineEdit({
-                                                                id: `${row.id}-${col.key}-${ts.source}`,
-                                                                colKey: col.key,
-                                                                val: rawVal ? String(rawVal) : JSON.stringify([]),
-                                                                history: [],
-                                                                historyPointer: 0,
-                                                              });
-                                                            }}
-                                                            className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 bg-white/60 hover:bg-white text-gray-700 rounded p-1 shadow-sm border border-black/10 w-6 h-6 flex items-center justify-center text-[10px] cursor-pointer ml-1"
-                                                            title="Edit sale"
-                                                          >
-                                                            ✏️
-                                                          </button>
                                                         </div>
                                                       )}
                                                     </div>
