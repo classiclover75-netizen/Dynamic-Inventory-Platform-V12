@@ -3287,7 +3287,7 @@ function AppContent() {
                                           {...commonProps}
                                           className={`p-1.5 border-r-[length:medium] border-b-[length:medium] border-[#e0e0e0] ${hoverClass}`}
                                         >
-                                          <div className="flex flex-wrap gap-1 justify-center items-center">
+                                          <div className="flex flex-col gap-1 justify-center">
                                             {remainingSources.map(
                                               (s: any, idx: number) => (
                                                 <div
@@ -3320,7 +3320,7 @@ function AppContent() {
                                           {...commonProps}
                                           className={`p-1.5 border-r-[length:medium] border-b-[length:medium] border-[#e0e0e0] ${hoverClass}`}
                                         >
-                                          <div className="flex flex-wrap gap-1 justify-center items-center">
+                                          <div className="flex flex-col gap-1 justify-center">
                                             {totalSources.map(
                                               (s: any, idx: number) => (
                                                 <div
@@ -3475,7 +3475,7 @@ function AppContent() {
                                             </div>
                                           )}
                                           <div
-                                            className="group flex flex-wrap gap-1 items-center justify-center w-full h-full relative cursor-text min-h-[20px] p-1"
+                                            className="group flex flex-col gap-1 justify-center w-full h-full relative cursor-text min-h-[20px] p-1.5"
                                             onClick={() =>
                                               setInlineEdit({
                                                 id: `${row.id}-${col.key}`,
