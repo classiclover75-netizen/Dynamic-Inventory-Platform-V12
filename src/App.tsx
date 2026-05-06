@@ -3292,7 +3292,7 @@ function AppContent() {
                                               (s: any, idx: number) => (
                                                 <div
                                                   key={idx}
-                                                  className={`px-2 py-0.5 rounded text-[10px] font-bold border flex items-center gap-1 ${s.remaining < 0 ? "bg-red-100 text-red-800 border-red-200" : s.color}`}
+                                                  className={`px-2 py-0.5 rounded text-[14px] font-bold border flex items-center gap-1 ${s.remaining < 0 ? "bg-red-100 text-red-800 border-red-200" : s.color}`}
                                                 >
                                                   <span className="opacity-70">
                                                     {s.source}:
@@ -3302,7 +3302,7 @@ function AppContent() {
                                               ),
                                             )}
                                             {remainingSources.length === 0 && (
-                                              <span className="text-gray-400 text-xs italic">
+                                              <span className="text-gray-400 text-[14px] italic">
                                                 0
                                               </span>
                                             )}
@@ -3325,7 +3325,7 @@ function AppContent() {
                                               (s: any, idx: number) => (
                                                 <div
                                                   key={idx}
-                                                  className={`px-2 py-0.5 rounded text-[10px] font-bold border flex items-center gap-1 ${s.color}`}
+                                                  className={`px-2 py-0.5 rounded text-[14px] font-bold border flex items-center gap-1 ${s.color}`}
                                                 >
                                                   <span className="opacity-70">
                                                     {s.source}:
@@ -3335,7 +3335,7 @@ function AppContent() {
                                               ),
                                             )}
                                             {totalSources.length === 0 && (
-                                              <span className="text-gray-400 text-xs italic">
+                                              <span className="text-gray-400 text-[14px] italic">
                                                 0
                                               </span>
                                             )}
@@ -3493,7 +3493,7 @@ function AppContent() {
                                                 (s: any, idx: number) => (
                                                   <div
                                                     key={idx}
-                                                    className={`px-1.5 py-0.5 rounded text-[10px] font-bold border flex items-center gap-1 ${s.color}`}
+                                                    className={`px-1.5 py-0.5 rounded text-[14px] font-bold border flex items-center gap-1 ${s.color}`}
                                                   >
                                                     <span className="opacity-70">
                                                       {s.source}:
@@ -3503,7 +3503,7 @@ function AppContent() {
                                                 ),
                                               )
                                             ) : (
-                                              <span className="text-gray-400 text-xs italic">
+                                              <span className="text-gray-400 text-[14px] italic">
                                                 0
                                               </span>
                                             )}
