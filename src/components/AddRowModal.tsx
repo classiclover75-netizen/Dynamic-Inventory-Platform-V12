@@ -11,6 +11,7 @@ import {
   Undo2,
   X,
   Copy,
+  Layers3,
 } from "lucide-react";
 
 const RichTextEditor = ({
@@ -753,6 +754,7 @@ export const AddRowModal = React.memo(
                                         />
                                         <Input
                                           type="number"
+                                          onFocus={(e) => e.target.select()}
                                           onWheel={(e) =>
                                             e.currentTarget.blur()
                                           }
@@ -793,9 +795,9 @@ export const AddRowModal = React.memo(
                                             type="button"
                                             className="ml-auto text-blue-600 hover:text-blue-800 flex items-center justify-center p-1 rounded hover:bg-blue-50 transition-colors shrink-0"
                                             onClick={() => onApplySourceToAll(activePage, col.key, src.source, src.color)}
-                                            title="Apply to All Rows"
+                                            title="Apply this source and zero quantity to all rows"
                                           >
-                                            <Copy size={14} />
+                                            <Layers3 className="h-4 w-4" />
                                           </button>
                                         )}
                                       </div>
@@ -900,6 +902,7 @@ export const AddRowModal = React.memo(
                                         </span>
                                         <Input
                                           type="number"
+                                          onFocus={(e) => e.target.select()}
                                           onWheel={(e) =>
                                             e.currentTarget.blur()
                                           }
