@@ -116,6 +116,18 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "36px", clas
   );
 };
 
+const parseMultiSource = (val: any) => {
+  try {
+    if (!val) return [];
+    const parsed = typeof val === "string" ? JSON.parse(val) : val;
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    return [{ source: "Default", qty: parseFloat(String(val)) || 0, color: "bg-gray-100 text-gray-800 border-gray-200" }];
+  }
+};
+const RANDOM_COLORS = ["bg-blue-100 text-blue-800 border-blue-200", "bg-green-100 text-green-800 border-green-200", "bg-orange-100 text-orange-800 border-orange-200", "bg-purple-100 text-purple-800 border-purple-200", "bg-pink-100 text-pink-800 border-pink-200"];
+const getRandomColor = () => RANDOM_COLORS[Math.floor(Math.random() * RANDOM_COLORS.length)];
+
 export const AddRowModal = React.memo(({
   isOpen,
   onClose,
@@ -152,6 +164,7 @@ export const AddRowModal = React.memo(({
   const [history, setHistory] = useState<any[][]>([[{}]]);
   const [pointer, setPointer] = useState(0);
   const isUndoRedoRef = useRef(false);
+  const [newSourceInputs, setNewSourceInputs] = useState<Record<number, {source: string, qty: string}>>({});
 
   const editableCols = columns.filter(c => c.key !== 'sr');
 
@@ -520,8 +533,77 @@ export const AddRowModal = React.memo(({
                   const colNumber = columns.findIndex(c => c.key === col.key) + 1;
                   return (
                   <div key={col.key} className="flex flex-col">
-                    <label className="text-xs font-bold text-gray-600 mb-1">{colNumber}. {col.name} ({col.type})</label>
-                    {col.type === 'multi_text' ? (
+                    <label className="text-xs font-bold text-gray-600 mb-1">
+                      {colNumber}. {col.name} {
+                        col.key === 'total_qty' ? '(Multi-Source)' : 
+                        col.type === 'sale_tracker' ? '(Sales per Source)' : 
+                        `(${col.type})`
+                      }
+                    </label>
+                    {col.key === 'total_qty' ? (() => {
+                      const currentSources = parseMultiSource(block[col.key]);
+                      const newSourceInput = newSourceInputs[i] || { source: '', qty: '' };
+                      return (
+                        <div className="border border-purple-200 bg-purple-50 p-2 rounded flex flex-col h-full min-h-[100px]">
+                          <div className="flex flex-col gap-2 mb-2">
+                            {currentSources.map((src: any, idx: number) => (
+                              <div key={idx} className="flex gap-2 items-center bg-white p-1 rounded shadow-sm border border-purple-100">
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold flex-1 truncate ${src.color}`}>{src.source}</span>
+                                <Input type="number" className="w-16 h-6 text-xs px-1 text-right" value={src.qty} onChange={(e) => {
+                                  const copy = [...currentSources];
+                                  copy[idx].qty = parseFloat(e.target.value) || 0;
+                                  handleUpdateField(i, col.key, JSON.stringify(copy));
+                                }}/>
+                                <button type="button" className="text-red-500 font-bold px-1 hover:text-red-700" onClick={() => {
+                                  const copy = currentSources.filter((_: any, k: number) => k !== idx);
+                                  handleUpdateField(i, col.key, JSON.stringify(copy));
+                                }}>X</button>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="flex flex-wrap sm:flex-nowrap gap-1 items-center pt-2 border-t border-purple-200 mt-auto">
+                            <Input placeholder="Source" className="flex-1 h-7 text-xs px-1 min-w-[60px]" value={newSourceInput.source} onChange={(e) => setNewSourceInputs({...newSourceInputs, [i]: {...newSourceInput, source: e.target.value}})} />
+                            <Input type="number" placeholder="Qty" className="w-16 h-7 text-xs px-1" value={newSourceInput.qty} onChange={(e) => setNewSourceInputs({...newSourceInputs, [i]: {...newSourceInput, qty: e.target.value}})} />
+                            <Button type="button" variant="green" className="h-7 text-[10px] px-2 py-0" onClick={() => {
+                              if (newSourceInput.source) {
+                                const updated = [...currentSources, { source: newSourceInput.source, qty: parseFloat(newSourceInput.qty) || 0, color: getRandomColor() }];
+                                handleUpdateField(i, col.key, JSON.stringify(updated));
+                                setNewSourceInputs({...newSourceInputs, [i]: { source: "", qty: "" }});
+                              }
+                            }}>Add</Button>
+                          </div>
+                        </div>
+                      );
+                    })() : col.type === 'sale_tracker' ? (() => {
+                      const totalSources = parseMultiSource(block['total_qty']);
+                      const saleSources = parseMultiSource(block[col.key]);
+                      return (
+                        <div className="border border-gray-200 bg-gray-50 p-2 rounded flex flex-col h-full min-h-[100px]">
+                          <div className="flex flex-col gap-2">
+                            {totalSources.map((ts: any, idx: number) => {
+                              const saleEntry = saleSources.find((s: any) => s.source === ts.source);
+                              const saleQty = saleEntry ? saleEntry.qty : '';
+                              return (
+                                <div key={idx} className="flex gap-2 items-center bg-white p-1 rounded shadow-sm border border-gray-100">
+                                  <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold flex-1 truncate ${ts.color}`}>{ts.source}</span>
+                                  <Input type="number" className="w-16 h-6 text-xs px-1 text-right text-blue-800 font-bold" value={saleQty} placeholder="Qty" onChange={(e) => {
+                                     const copy = [...saleSources];
+                                     const existingIdx = copy.findIndex((s: any) => s.source === ts.source);
+                                     if (existingIdx >= 0) {
+                                       copy[existingIdx].qty = parseFloat(e.target.value) || 0;
+                                     } else {
+                                       copy.push({ source: ts.source, qty: parseFloat(e.target.value) || 0, color: ts.color });
+                                     }
+                                     handleUpdateField(i, col.key, JSON.stringify(copy));
+                                  }}/>
+                                </div>
+                              );
+                            })}
+                            {totalSources.length === 0 && <div className="text-[10px] text-gray-500 italic p-1">No sources added yet. Add to Total Qty first.</div>}
+                          </div>
+                        </div>
+                      );
+                    })() : col.type === 'multi_text' ? (
                       <div className={isReadOnly ? 'pointer-events-none opacity-70 bg-gray-50' : ''}>
                       <RichTextEditor 
                         className="w-full min-h-[90px]"
