@@ -3372,6 +3372,8 @@ function AppContent() {
                                                     (s: any) => s.source === ts.source
                                                   );
                                                   const saleQty = currentSaleEntry ? currentSaleEntry.qty : 0;
+                                                  const originalSaleEntry = currentVal.find((s: any) => s.source === ts.source);
+                                                  const originalQty = originalSaleEntry ? originalSaleEntry.qty : 0;
 
                                                   return (
                                                     <div key={idx} className="w-full relative">
@@ -3405,6 +3407,7 @@ function AppContent() {
                                                           onClick={(e) => e.stopPropagation()}
                                                         >
                                                           <div className="font-bold text-gray-700 text-[14px]">Edit Sale for {ts.source}</div>
+                                                          <div className="text-[11px] text-gray-500 mb-2 -mt-0.5">Previous Value: <span className="font-bold text-gray-800">{originalQty}</span></div>
                                                           <div className="flex items-center justify-between gap-2 border-b pb-3">
                                                             <span className={`px-2 py-1 rounded text-[15px] font-bold border ${ts.color}`}>{ts.source}</span>
                                                             <input
