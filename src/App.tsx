@@ -3358,7 +3358,7 @@ function AppContent() {
                                         <td
                                           key={col.key}
                                           {...commonProps}
-                                          className={`p-1.5 border-r-[length:medium] border-b-[length:medium] border-[#e0e0e0] ${hoverClass} text-xs relative ${isCellEditing ? "z-50" : "overflow-hidden"}`}
+                                          className={`p-1.5 border-r-[length:medium] border-b-[length:medium] border-[#e0e0e0] ${hoverClass} text-xs relative ${isCellEditing ? "!z-[99999]" : "overflow-hidden"}`}
                                         >
                                           <div className="flex flex-col gap-1 justify-center w-full h-full min-h-[20px] p-1.5">
                                             {totalSources.length > 0 ? (
@@ -3397,7 +3397,7 @@ function AppContent() {
 
                                                       {isThisRowEditing && (
                                                         <div 
-                                                          className="absolute z-[9999] top-1/2 -translate-y-1/2 right-0 bg-white p-3 rounded-lg shadow-[0_5px_20px_rgba(0,0,0,0.3)] border-[3px] flex flex-col gap-4 min-w-[240px]"
+                                                          className="absolute z-[999999] top-1/2 -translate-y-1/2 right-0 bg-white p-3 rounded-lg shadow-[0_5px_20px_rgba(0,0,0,0.5)] border-[3px] flex flex-col gap-4 min-w-[240px]"
                                                           style={{ borderColor: ts.color?.includes('blue') ? '#3b82f6' : ts.color?.includes('green') ? '#22c55e' : ts.color?.includes('yellow') ? '#eab308' : ts.color?.includes('red') ? '#ef4444' : ts.color?.includes('purple') ? '#a855f7' : '#94a3b8' }}
                                                           onClick={(e) => e.stopPropagation()}
                                                         >
