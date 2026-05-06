@@ -3427,6 +3427,15 @@ function AppContent() {
                                                               onFocus={(e) => {
                                                                 setTimeout(() => e.target.select(), 0);
                                                               }}
+                                                              onKeyDown={(e) => {
+                                                                if (e.key === "Enter") {
+                                                                  e.preventDefault();
+                                                                  handleSaveInlineEdit(activePage!, row.id, col.key, inlineEdit!.val);
+                                                                } else if (e.key === "Escape") {
+                                                                  e.preventDefault();
+                                                                  setInlineEdit(null);
+                                                                }
+                                                              }}
                                                               autoFocus
                                                               className="w-24 bg-gray-50 border border-gray-300 px-2 py-1 text-right font-bold text-[16px] rounded text-blue-800 outline-none focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-100 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                                             />
@@ -3437,7 +3446,7 @@ function AppContent() {
                                                                 e.stopPropagation();
                                                                 setInlineEdit(null);
                                                               }}
-                                                              className="text-gray-500 hover:text-gray-800 px-3 py-1.5 text-sm font-bold transition-colors"
+                                                              className="bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded px-4 py-1.5 text-sm font-bold shadow-md transition-colors"
                                                             >
                                                               Cancel
                                                             </button>
