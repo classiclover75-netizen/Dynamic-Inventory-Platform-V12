@@ -19,7 +19,11 @@ import {
   History,
 } from "lucide-react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useReactTable, getCoreRowModel, flexRender } from "@tanstack/react-table";
+import {
+  useReactTable,
+  getCoreRowModel,
+  flexRender,
+} from "@tanstack/react-table";
 import {
   DragDropContext,
   Droppable,
@@ -99,6 +103,34 @@ const renderHighlightedText = (text: string, highlight: string) => {
   );
 };
 
+const parseMultiSource = (val: any) => {
+  try {
+    if (!val) return [];
+    const parsed = typeof val === "string" ? JSON.parse(val) : val;
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    // Fallback for legacy flat numbers
+    return [
+      {
+        source: "Default",
+        qty: parseFloat(String(val)) || 0,
+        color: "bg-gray-100 text-gray-800 border-gray-200",
+      },
+    ];
+  }
+};
+
+const RANDOM_COLORS = [
+  "bg-blue-100 text-blue-800 border-blue-200",
+  "bg-green-100 text-green-800 border-green-200",
+  "bg-orange-100 text-orange-800 border-orange-200",
+  "bg-purple-100 text-purple-800 border-purple-200",
+  "bg-pink-100 text-pink-800 border-pink-200",
+  "bg-teal-100 text-teal-800 border-teal-200",
+];
+const getRandomColor = () =>
+  RANDOM_COLORS[Math.floor(Math.random() * RANDOM_COLORS.length)];
+
 function AppContent() {
   const [state, setState] = useState<AppState>({
     pages: [],
@@ -118,7 +150,8 @@ function AppContent() {
   const [maxSearchHistory, setMaxSearchHistory] = useState(10);
   const [showHistoryLimitModal, setShowHistoryLimitModal] = useState(false);
   const [tempHistoryLimit, setTempHistoryLimit] = useState(10);
-  const [trackerSelectionModalSource, setTrackerSelectionModalSource] = useState<string | null>(null);
+  const [trackerSelectionModalSource, setTrackerSelectionModalSource] =
+    useState<string | null>(null);
 
   const [localSettings, setLocalSettings] = useState({ ghostHighlight: false });
 
@@ -585,21 +618,27 @@ function AppContent() {
     if (!activePage) return;
 
     setIsImporting(true);
-    const isZip = file.name.toLowerCase().endsWith('.zip');
-    setImportProgress({ message: `Processing ${isZip ? 'ZIP' : 'JSON'} file...`, percent: null });
+    const isZip = file.name.toLowerCase().endsWith(".zip");
+    setImportProgress({
+      message: `Processing ${isZip ? "ZIP" : "JSON"} file...`,
+      percent: null,
+    });
 
     try {
       if (isZip) {
         const formData = new FormData();
-        formData.append('backup', file);
+        formData.append("backup", file);
 
-        const response = await fetch('/api/import-zip', {
-          method: 'POST',
+        const response = await fetch("/api/import-zip", {
+          method: "POST",
           body: formData,
         });
 
         if (response.ok) {
-          setImportProgress({ message: "Data imported successfully!", percent: 100 });
+          setImportProgress({
+            message: "Data imported successfully!",
+            percent: 100,
+          });
           toast("Data imported successfully");
           setTimeout(() => window.location.reload(), 1000);
         } else {
@@ -620,7 +659,10 @@ function AppContent() {
         });
 
         if (response.ok) {
-          setImportProgress({ message: "Data imported successfully!", percent: 100 });
+          setImportProgress({
+            message: "Data imported successfully!",
+            percent: 100,
+          });
           toast("Data imported successfully");
           setTimeout(() => window.location.reload(), 1000);
         } else {
@@ -684,26 +726,34 @@ function AppContent() {
     step: number;
   } | null>(null);
 
-  const handleImportData = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportData = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     setIsImporting(true);
-    const isZip = file.name.toLowerCase().endsWith('.zip');
-    setImportProgress({ message: `Processing ${isZip ? 'ZIP' : 'JSON'} file...`, percent: null });
+    const isZip = file.name.toLowerCase().endsWith(".zip");
+    setImportProgress({
+      message: `Processing ${isZip ? "ZIP" : "JSON"} file...`,
+      percent: null,
+    });
 
     try {
       if (isZip) {
         const formData = new FormData();
-        formData.append('backup', file);
+        formData.append("backup", file);
 
-        const response = await fetch('/api/import-zip', {
-          method: 'POST',
+        const response = await fetch("/api/import-zip", {
+          method: "POST",
           body: formData,
         });
 
         if (response.ok) {
-          setImportProgress({ message: "Data imported successfully!", percent: 100 });
+          setImportProgress({
+            message: "Data imported successfully!",
+            percent: 100,
+          });
           toast("Data imported successfully");
           setTimeout(() => window.location.reload(), 1000);
         } else {
@@ -723,7 +773,10 @@ function AppContent() {
         });
 
         if (response.ok) {
-          setImportProgress({ message: "Data imported successfully!", percent: 100 });
+          setImportProgress({
+            message: "Data imported successfully!",
+            percent: 100,
+          });
           toast("Data imported successfully");
           setTimeout(() => window.location.reload(), 1000);
         } else {
@@ -917,9 +970,12 @@ function AppContent() {
     }
   };
 
-  const toggleModal = React.useCallback((modal: keyof typeof modals, value: boolean) => {
-    setModals((prev) => ({ ...prev, [modal]: value }));
-  }, []);
+  const toggleModal = React.useCallback(
+    (modal: keyof typeof modals, value: boolean) => {
+      setModals((prev) => ({ ...prev, [modal]: value }));
+    },
+    [],
+  );
 
   const closeAllModals = React.useCallback(() => {
     setModals({
@@ -950,16 +1006,16 @@ function AppContent() {
     try {
       const trackerConfig = state.pageConfigs[trackerName];
       if (!trackerConfig || !trackerConfig.linkedSourcePage) return;
-      
+
       const sourcePage = trackerConfig.linkedSourcePage;
       const sourceRows = state.pageRows[sourcePage] || [];
       const trackerRows = state.pageRows[trackerName] || [];
-      
+
       const trackerRowsMap = new Map();
       for (const tr of trackerRows) {
         if (tr.id) trackerRowsMap.set(String(tr.id), tr);
       }
-      
+
       const repairedTrackerRows = sourceRows.map((sr: any) => {
         const existingTr = trackerRowsMap.get(String(sr.id));
         if (existingTr) {
@@ -991,10 +1047,10 @@ function AppContent() {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ rows: repairedTrackerRows }),
-        }
+        },
       );
       if (!response.ok) throw new Error("Failed to sync to server");
-      
+
       toast("Tracker synced successfully!");
     } catch (err) {
       console.error("Sync error:", err);
@@ -1002,7 +1058,10 @@ function AppContent() {
     }
   };
 
-  const handleCreateTracker = async (sourcePage: string, selectedColKeys?: string[]) => {
+  const handleCreateTracker = async (
+    sourcePage: string,
+    selectedColKeys?: string[],
+  ) => {
     const sourceConfig = state.pageConfigs[sourcePage];
     const sourceRows = state.pageRows[sourcePage] || [];
     if (!sourceConfig) return toast("Source page not found!");
@@ -1018,8 +1077,10 @@ function AppContent() {
       trackerName = `${baseTrackerName} (${trackerCounter})`;
     }
 
-    const filteredColumns = selectedColKeys 
-      ? sourceConfig.columns.filter(c => selectedColKeys.includes(c.key) || c.key === "sr")
+    const filteredColumns = selectedColKeys
+      ? sourceConfig.columns.filter(
+          (c) => selectedColKeys.includes(c.key) || c.key === "sr",
+        )
       : sourceConfig.columns;
 
     // EXACT COPY of ALL columns, appending only Total and Remaining
@@ -1052,10 +1113,16 @@ function AppContent() {
     const newRows = sourceRows.map((row) => {
       const newRow = { ...row };
       if (selectedColKeys) {
-        Object.keys(newRow).forEach(k => {
-           if (k !== 'id' && k !== 'sr' && !selectedColKeys.includes(k) && k !== 'total_qty' && k !== 'remaining_qty') {
-             delete newRow[k];
-           }
+        Object.keys(newRow).forEach((k) => {
+          if (
+            k !== "id" &&
+            k !== "sr" &&
+            !selectedColKeys.includes(k) &&
+            k !== "total_qty" &&
+            k !== "remaining_qty"
+          ) {
+            delete newRow[k];
+          }
         });
       }
       newRow.total_qty = "0";
@@ -1087,8 +1154,6 @@ function AppContent() {
       toast("Failed to create tracker page");
     }
   };
-
-
 
   const handleToggleColumnArchive = async (
     colKey: string,
@@ -1225,8 +1290,8 @@ function AppContent() {
   };
 
   const handleCreatePage = async (name: string, columns: Column[]) => {
-    const columnsWithDefaults = columns.map(c => {
-      if (c.type === 'sale_tracker' || (c as any).type === 'range') {
+    const columnsWithDefaults = columns.map((c) => {
+      if (c.type === "sale_tracker" || (c as any).type === "range") {
         return { ...c, width: c.width || 150 };
       }
       return c;
@@ -1395,7 +1460,7 @@ function AppContent() {
 
       setState((prev) => {
         const newPages = prev.pages.filter((p) => p !== pageToDelete);
-        
+
         // Safety Verification Check: Deep clone to guarantee immutability
         // ensures other pages like 'Main Page' have zero risk of shared reference mutation
         const newConfigs = JSON.parse(JSON.stringify(prev.pageConfigs));
@@ -1473,46 +1538,54 @@ function AppContent() {
 
   const handleSaveColumnWidth = async (colKey: string, newWidth: number) => {
     if (!state.activePage || !activeConfig) return;
-    
+
     const roundedWidth = Math.round(newWidth);
 
     // 1. Update the active page's columns
     const updatedColumns = activeConfig.columns.map((c) =>
-      c.key === colKey ? { ...c, width: roundedWidth } : c
+      c.key === colKey ? { ...c, width: roundedWidth } : c,
     );
     const updatedConfig = { ...activeConfig, columns: updatedColumns };
 
     // 2. Find all Live Trackers linked to this page
     const linkedTrackers = Object.entries(state.pageConfigs)
-      .filter(([, cfg]) => (cfg as PageConfig).linkedSourcePage === state.activePage)
+      .filter(
+        ([, cfg]) => (cfg as PageConfig).linkedSourcePage === state.activePage,
+      )
       .map(([name]) => name);
 
     // 3. Prepare state mapping and API promises
-    const newPageConfigs = { ...state.pageConfigs, [state.activePage]: updatedConfig };
+    const newPageConfigs = {
+      ...state.pageConfigs,
+      [state.activePage]: updatedConfig,
+    };
     const apiPromises = [
       fetch(`/api/pageConfigs/${encodeURIComponent(state.activePage)}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ config: updatedConfig }),
-      })
+      }),
     ];
 
     // 4. Update the specific column in every linked tracker silently
-    linkedTrackers.forEach(trackerName => {
+    linkedTrackers.forEach((trackerName) => {
       const trackerConfig = state.pageConfigs[trackerName];
       if (trackerConfig) {
-        const updatedTrackerCols = trackerConfig.columns.map(c => 
-          c.key === colKey ? { ...c, width: roundedWidth } : c
+        const updatedTrackerCols = trackerConfig.columns.map((c) =>
+          c.key === colKey ? { ...c, width: roundedWidth } : c,
         );
-        const newTrackerConfig = { ...trackerConfig, columns: updatedTrackerCols };
+        const newTrackerConfig = {
+          ...trackerConfig,
+          columns: updatedTrackerCols,
+        };
         newPageConfigs[trackerName] = newTrackerConfig;
-        
+
         apiPromises.push(
           fetch(`/api/pageConfigs/${encodeURIComponent(trackerName)}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ config: newTrackerConfig }),
-          })
+          }),
         );
       }
     });
@@ -1533,8 +1606,8 @@ function AppContent() {
 
   const handleCreateColumns = async (newColumns: Column[]) => {
     // Set default width of 150 for sale and range columns
-    const columnsWithDefaults = newColumns.map(c => {
-      if (c.type === 'sale_tracker' || (c as any).type === 'range') {
+    const columnsWithDefaults = newColumns.map((c) => {
+      if (c.type === "sale_tracker" || (c as any).type === "range") {
         return { ...c, width: c.width || 150 };
       }
       return c;
@@ -1542,7 +1615,10 @@ function AppContent() {
 
     const updatedConfig = {
       ...state.pageConfigs[state.activePage],
-      columns: [...state.pageConfigs[state.activePage].columns, ...columnsWithDefaults],
+      columns: [
+        ...state.pageConfigs[state.activePage].columns,
+        ...columnsWithDefaults,
+      ],
     };
 
     try {
@@ -2115,22 +2191,22 @@ function AppContent() {
             ? saleCols[0].key
             : null;
       const getNum = (v: any) => {
-        const n = parseFloat(String(v || 0));
-        return isNaN(n) ? 0 : n;
+        return parseMultiSource(v).reduce(
+          (sum: number, s: any) => sum + (parseFloat(s.qty) || 0),
+          0,
+        );
       };
 
       if (trackerFilter !== "all") {
         rows = rows.filter((row) => {
-          const total = parseFloat(String(row.total_qty || 0));
+          const total = getNum(row.total_qty);
           const totalSales = saleCols.reduce(
-            (sum, c) => sum + parseFloat(String(row[c.key] || 0)),
+            (sum, c) => sum + getNum(row[c.key]),
             0,
           );
           const remaining = total - totalSales;
           const minStock = activeConfig.minStockAlert || 5;
-          const latestSaleVal = latestSaleCol
-            ? parseFloat(String(row[latestSaleCol] || 0))
-            : 0;
+          const latestSaleVal = latestSaleCol ? getNum(row[latestSaleCol]) : 0;
 
           if (trackerFilter === "low") {
             return remaining <= minStock;
@@ -2457,7 +2533,7 @@ function AppContent() {
 
   useEffect(() => {
     const isResizing = sizingInfo.isResizingColumn;
-    
+
     if (isResizing) {
       // User is currently dragging
       prevResizingColRef.current = isResizing;
@@ -2465,7 +2541,7 @@ function AppContent() {
       // User just released the mouse (Resize Ended)
       const colKey = prevResizingColRef.current as string;
       const finalWidth = sizing[colKey];
-      
+
       if (colKey && finalWidth) {
         handleSaveColumnWidth(colKey, finalWidth);
       }
@@ -2649,8 +2725,8 @@ function AppContent() {
         <DragDropContext onDragEnd={isSecondary ? () => {} : handleDragEnd}>
           <table
             className="border-separate border-spacing-0 table-fixed w-max max-w-none text-[14px] font-normal"
-            style={{ 
-              width: `${appTable.getTotalSize() + (!isSecondary && config.rowReorderEnabled ? 60 : 0)}px`
+            style={{
+              width: `${appTable.getTotalSize() + (!isSecondary && config.rowReorderEnabled ? 60 : 0)}px`,
             }}
             onMouseOver={handleTableMouseOver}
             onMouseOut={handleTableMouseOut}
@@ -2660,7 +2736,11 @@ function AppContent() {
                 {!isSecondary && config.rowReorderEnabled && (
                   <th
                     className={`sticky top-0 z-20 text-center p-1.5 border-r-[length:medium] border-b-[length:medium] border-[#e0e0e0] bg-[#f3f3f3] data-[hovered-col=true]:bg-[#fce7f3]`}
-                    style={{ width: '60px', minWidth: '60px', maxWidth: '60px' }}
+                    style={{
+                      width: "60px",
+                      minWidth: "60px",
+                      maxWidth: "60px",
+                    }}
                   >
                     <input
                       type="checkbox"
@@ -2679,7 +2759,9 @@ function AppContent() {
                   </th>
                 )}
                 {visibleColumns.map((col, i) => {
-                  const header = appTable.getFlatHeaders().find((h) => h.id === col.key);
+                  const header = appTable
+                    .getFlatHeaders()
+                    .find((h) => h.id === col.key);
                   const activeWidth = header
                     ? header.getSize()
                     : col.width ||
@@ -2700,7 +2782,11 @@ function AppContent() {
                     <th
                       key={col.key}
                       className={`relative sticky top-0 z-20 text-[14px] font-bold text-[#2f3d49] p-1.5 border-r-[length:medium] border-b-[length:medium] border-[#e0e0e0] ${defaultWidthClass} bg-[#f3f3f3] data-[hovered-col=true]:bg-[#fce7f3]`}
-                      style={{ width: `${activeWidth}px`, minWidth: `${activeWidth}px`, maxWidth: `${activeWidth}px` }}
+                      style={{
+                        width: `${activeWidth}px`,
+                        minWidth: `${activeWidth}px`,
+                        maxWidth: `${activeWidth}px`,
+                      }}
                     >
                       <div className="flex items-center gap-1">
                         {i + 1}. {col.name}{" "}
@@ -2735,7 +2821,7 @@ function AppContent() {
                           </div>
                         )}
                       </div>
-                      
+
                       {header && (
                         <div
                           onMouseDown={(e) => {
@@ -2817,7 +2903,11 @@ function AppContent() {
                                 {!isSecondary && config.rowReorderEnabled && (
                                   <td
                                     className={`text-center p-1.5 border-r-[length:medium] border-b-[length:medium] border-[#e0e0e0] data-[hovered-col=true]:bg-[#f0f7ff] data-[hovered-row=true]:bg-[#e8f0fe] data-[hovered-exact=true]:!bg-[#d2e3fc] data-[hovered-exact=true]:outline data-[hovered-exact=true]:outline-[3px] data-[hovered-exact=true]:outline-[#2b579a] data-[hovered-exact=true]:relative data-[hovered-exact=true]:z-10 data-[hovered-exact=true]:shadow-inner`}
-                                    style={{ width: '60px', minWidth: '60px', maxWidth: '60px' }}
+                                    style={{
+                                      width: "60px",
+                                      minWidth: "60px",
+                                      maxWidth: "60px",
+                                    }}
                                   >
                                     <div className="flex items-center justify-center gap-2">
                                       <div
@@ -2844,7 +2934,9 @@ function AppContent() {
                                   </td>
                                 )}
                                 {visibleColumns.map((col, colIndex) => {
-                                  const header = appTable.getFlatHeaders().find((h) => h.id === col.key);
+                                  const header = appTable
+                                    .getFlatHeaders()
+                                    .find((h) => h.id === col.key);
                                   const activeWidth = header
                                     ? header.getSize()
                                     : col.width ||
@@ -2859,7 +2951,7 @@ function AppContent() {
                                     minWidth: `${activeWidth}px`,
                                     maxWidth: `${activeWidth}px`,
                                   };
-                                  
+
                                   const hoverClass =
                                     "data-[hovered-col=true]:bg-[#f0f7ff] data-[hovered-row=true]:bg-[#e8f0fe] data-[hovered-exact=true]:!bg-[#d2e3fc] data-[hovered-exact=true]:outline data-[hovered-exact=true]:outline-[3px] data-[hovered-exact=true]:outline-[#2b579a] data-[hovered-exact=true]:relative data-[hovered-exact=true]:z-10 data-[hovered-exact=true]:shadow-inner";
                                   const colTokens = isActiveRow
@@ -3158,46 +3250,80 @@ function AppContent() {
                                     }
 
                                     if (col.key === "remaining_qty") {
-                                      const total = parseFloat(
-                                        String(row.total_qty || 0),
+                                      const totalSources = parseMultiSource(
+                                        row.total_qty,
                                       );
-                                      const totalSales = config.columns
-                                        .filter(
-                                          (c) => c.type === "sale_tracker",
-                                        )
-                                        .reduce(
-                                          (sum, c) =>
-                                            sum +
-                                            parseFloat(String(row[c.key] || 0)),
-                                          0,
-                                        );
-                                      const remaining = total - totalSales;
-                                      const minStock =
-                                        config.minStockAlert || 5;
+                                      const saleCols = config.columns.filter(
+                                        (c) => c.type === "sale_tracker",
+                                      );
 
-                                      let stateClass = hoverClass;
-                                      if (remaining < 0)
-                                        stateClass =
-                                          "bg-red-200 text-red-900 font-bold";
-                                      else if (remaining <= minStock)
-                                        stateClass =
-                                          "bg-red-50 text-red-900 font-bold";
+                                      const remainingSources = totalSources.map(
+                                        (ts: any) => {
+                                          let totalSaleForSource = 0;
+                                          saleCols.forEach((sc) => {
+                                            const sales = parseMultiSource(
+                                              row[sc.key],
+                                            );
+                                            const saleEntry = sales.find(
+                                              (s: any) =>
+                                                s.source === ts.source,
+                                            );
+                                            if (saleEntry)
+                                              totalSaleForSource +=
+                                                parseFloat(saleEntry.qty) || 0;
+                                          });
+                                          return {
+                                            ...ts,
+                                            remaining:
+                                              (parseFloat(ts.qty) || 0) -
+                                              totalSaleForSource,
+                                          };
+                                        },
+                                      );
 
                                       return (
                                         <td
                                           key={col.key}
                                           {...commonProps}
-                                          className={`p-1.5 border-r-[length:medium] border-b-[length:medium] border-[#e0e0e0] overflow-hidden whitespace-pre-wrap ${stateClass}`}
+                                          className={`p-1.5 border-r-[length:medium] border-b-[length:medium] border-[#e0e0e0] ${hoverClass}`}
                                         >
-                                          {remaining}
+                                          <div className="flex flex-wrap gap-1 justify-center items-center">
+                                            {remainingSources.map(
+                                              (s: any, idx: number) => (
+                                                <div
+                                                  key={idx}
+                                                  className={`px-2 py-0.5 rounded text-[10px] font-bold border flex items-center gap-1 ${s.remaining < 0 ? "bg-red-100 text-red-800 border-red-200" : s.color}`}
+                                                >
+                                                  <span className="opacity-70">
+                                                    {s.source}:
+                                                  </span>{" "}
+                                                  <span>{s.remaining}</span>
+                                                </div>
+                                              ),
+                                            )}
+                                            {remainingSources.length === 0 && (
+                                              <span className="text-gray-400 text-xs italic">
+                                                0
+                                              </span>
+                                            )}
+                                          </div>
                                         </td>
                                       );
                                     }
 
-                                    if (col.type === "sale_tracker") {
+                                    if (
+                                      col.key === "total_qty" ||
+                                      col.type === "sale_tracker"
+                                    ) {
                                       const isEditing =
                                         inlineEdit?.id ===
                                         `${row.id}-${col.key}`;
+                                      const totalSources = parseMultiSource(
+                                        row.total_qty,
+                                      );
+                                      const currentVal =
+                                        parseMultiSource(rawVal);
+
                                       return (
                                         <td
                                           key={col.key}
@@ -3205,86 +3331,285 @@ function AppContent() {
                                           className={`p-1.5 border-r-[length:medium] border-b-[length:medium] border-[#e0e0e0] ${hoverClass} text-xs relative ${isEditing ? "" : "overflow-hidden"}`}
                                         >
                                           {isEditing && (
-                                            <div className="absolute z-[999] top-1/2 right-0 -translate-y-1/2 bg-white p-2 rounded-lg shadow-[0_10px_40px_rgba(0,0,0,0.3)] border-2 border-[#2b579a] flex items-center gap-2 min-w-max">
-                                              <input
-                                                type="number"
-                                                autoFocus
-                                                value={inlineEdit.val}
-                                                onChange={(e) => {
-                                                  const newVal = e.target.value;
-                                                  setInlineEdit((prev) => {
-                                                    if (!prev) return prev;
-                                                    const newHist = [
-                                                      ...(
-                                                        prev.history || []
-                                                      ).slice(
-                                                        0,
-                                                        (prev.historyPointer ||
-                                                          0) + 1,
-                                                      ),
-                                                      newVal,
-                                                    ];
-                                                    return {
-                                                      ...prev,
-                                                      val: newVal,
-                                                      history: newHist,
-                                                      historyPointer:
-                                                        newHist.length - 1,
-                                                    };
-                                                  });
-                                                }}
-                                                onFocus={(e) =>
-                                                  e.target.select()
-                                                }
-                                                onWheel={(e) =>
-                                                  e.currentTarget.blur()
-                                                }
-                                                onKeyDown={(e) => {
-                                                  if (e.key === "Enter")
+                                            <div
+                                              className="absolute z-[999] top-[50%] right-full sm:right-auto sm:left-1/2 -translate-y-1/2 -translate-x-0 sm:-translate-x-1/2 bg-white p-3 rounded-lg shadow-xl border-2 border-[#2b579a] min-w-[280px]"
+                                              onClick={(e) =>
+                                                e.stopPropagation()
+                                              }
+                                            >
+                                              {col.key === "total_qty" ? (
+                                                <div className="flex flex-col gap-2">
+                                                  <div className="font-bold text-gray-700 mb-1">
+                                                    Batch Sources (Total)
+                                                  </div>
+                                                  {currentVal.map(
+                                                    (src: any, idx: number) => (
+                                                      <div
+                                                        key={idx}
+                                                        className="flex items-center gap-2 bg-gray-50 p-1 px-2 rounded"
+                                                      >
+                                                        <input
+                                                          type="text"
+                                                          value={src.source}
+                                                          onChange={(e) => {
+                                                            const copy = [
+                                                              ...currentVal,
+                                                            ];
+                                                            copy[idx].source =
+                                                              e.target.value;
+                                                            setInlineEdit(
+                                                              (prev) => ({
+                                                                ...prev!,
+                                                                val: JSON.stringify(
+                                                                  copy,
+                                                                ),
+                                                              }),
+                                                            );
+                                                          }}
+                                                          className="flex-1 w-20 border px-1 py-0.5 text-xs rounded"
+                                                        />
+                                                        <input
+                                                          type="number"
+                                                          value={src.qty}
+                                                          onChange={(e) => {
+                                                            const copy = [
+                                                              ...currentVal,
+                                                            ];
+                                                            copy[idx].qty =
+                                                              parseFloat(
+                                                                e.target.value,
+                                                              ) || 0;
+                                                            setInlineEdit(
+                                                              (prev) => ({
+                                                                ...prev!,
+                                                                val: JSON.stringify(
+                                                                  copy,
+                                                                ),
+                                                              }),
+                                                            );
+                                                          }}
+                                                          className="w-16 border px-1 py-0.5 text-xs rounded"
+                                                        />
+                                                        <button
+                                                          onClick={() => {
+                                                            const copy =
+                                                              currentVal.filter(
+                                                                (
+                                                                  _: any,
+                                                                  i: number,
+                                                                ) => i !== idx,
+                                                              );
+                                                            setInlineEdit(
+                                                              (prev) => ({
+                                                                ...prev!,
+                                                                val: JSON.stringify(
+                                                                  copy,
+                                                                ),
+                                                              }),
+                                                            );
+                                                          }}
+                                                          className="text-red-500 hover:text-red-700 font-bold px-1"
+                                                        >
+                                                          X
+                                                        </button>
+                                                      </div>
+                                                    ),
+                                                  )}
+                                                  <div className="flex items-center gap-2 mt-2 pt-2 border-t">
+                                                    <input
+                                                      id={`new-source-${row.id}`}
+                                                      placeholder="New source..."
+                                                      className="flex-1 border px-1 py-0.5 text-xs rounded"
+                                                    />
+                                                    <input
+                                                      id={`new-qty-${row.id}`}
+                                                      type="number"
+                                                      placeholder="Qty"
+                                                      className="w-16 border px-1 py-0.5 text-xs rounded"
+                                                    />
+                                                    <button
+                                                      onClick={() => {
+                                                        const srcInput =
+                                                          document.getElementById(
+                                                            `new-source-${row.id}`,
+                                                          ) as HTMLInputElement;
+                                                        const qtyInput =
+                                                          document.getElementById(
+                                                            `new-qty-${row.id}`,
+                                                          ) as HTMLInputElement;
+                                                        if (srcInput.value) {
+                                                          const copy = [
+                                                            ...currentVal,
+                                                            {
+                                                              source:
+                                                                srcInput.value,
+                                                              qty:
+                                                                parseFloat(
+                                                                  qtyInput.value,
+                                                                ) || 0,
+                                                              color:
+                                                                getRandomColor(),
+                                                            },
+                                                          ];
+                                                          setInlineEdit(
+                                                            (prev) => ({
+                                                              ...prev!,
+                                                              val: JSON.stringify(
+                                                                copy,
+                                                              ),
+                                                            }),
+                                                          );
+                                                          srcInput.value = "";
+                                                          qtyInput.value = "";
+                                                        }
+                                                      }}
+                                                      className="bg-blue-600 text-white px-2 py-0.5 text-xs rounded font-bold"
+                                                    >
+                                                      Add
+                                                    </button>
+                                                  </div>
+                                                </div>
+                                              ) : (
+                                                <div className="flex flex-col gap-2">
+                                                  <div className="font-bold text-gray-700 mb-1">
+                                                    Sales per Source
+                                                  </div>
+                                                  {totalSources.map(
+                                                    (src: any, idx: number) => {
+                                                      const currentSaleEntry =
+                                                        currentVal.find(
+                                                          (s: any) =>
+                                                            s.source ===
+                                                            src.source,
+                                                        );
+                                                      const saleQty =
+                                                        currentSaleEntry
+                                                          ? currentSaleEntry.qty
+                                                          : 0;
+                                                      return (
+                                                        <div
+                                                          key={idx}
+                                                          className="flex items-center gap-2 bg-gray-50 p-1 rounded justify-between px-2"
+                                                        >
+                                                          <span
+                                                            className={`text-xs px-2 py-0.5 rounded font-bold border ${src.color}`}
+                                                          >
+                                                            {src.source}
+                                                          </span>
+                                                          <input
+                                                            type="number"
+                                                            value={saleQty}
+                                                            onChange={(e) => {
+                                                              const copy = [
+                                                                ...currentVal,
+                                                              ];
+                                                              const existingIdx =
+                                                                copy.findIndex(
+                                                                  (s: any) =>
+                                                                    s.source ===
+                                                                    src.source,
+                                                                );
+                                                              if (
+                                                                existingIdx >= 0
+                                                              ) {
+                                                                copy[
+                                                                  existingIdx
+                                                                ].qty =
+                                                                  parseFloat(
+                                                                    e.target
+                                                                      .value,
+                                                                  ) || 0;
+                                                              } else {
+                                                                copy.push({
+                                                                  source:
+                                                                    src.source,
+                                                                  qty:
+                                                                    parseFloat(
+                                                                      e.target
+                                                                        .value,
+                                                                    ) || 0,
+                                                                  color:
+                                                                    src.color,
+                                                                });
+                                                              }
+                                                              setInlineEdit(
+                                                                (prev) => ({
+                                                                  ...prev!,
+                                                                  val: JSON.stringify(
+                                                                    copy,
+                                                                  ),
+                                                                }),
+                                                              );
+                                                            }}
+                                                            className="w-20 border px-1 py-0.5 text-right font-bold text-xs rounded text-blue-800"
+                                                          />
+                                                        </div>
+                                                      );
+                                                    },
+                                                  )}
+                                                </div>
+                                              )}
+
+                                              <div className="flex items-center justify-end gap-2 mt-3 pt-2 border-t">
+                                                <button
+                                                  onClick={() =>
+                                                    setInlineEdit(null)
+                                                  }
+                                                  className="text-gray-500 hover:text-gray-800 px-3 py-1 text-xs font-bold"
+                                                >
+                                                  Cancel
+                                                </button>
+                                                <button
+                                                  onClick={() => {
                                                     handleSaveInlineEdit(
                                                       activePage!,
                                                       row.id,
                                                       col.key,
                                                       inlineEdit.val,
                                                     );
-                                                  if (e.key === "Escape")
-                                                    setInlineEdit(null);
-                                                }}
-                                                className="w-[80px] text-center text-sm p-1.5 bg-gray-50 outline-none rounded text-black font-bold border border-gray-300 focus:border-[#2b579a] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                              />
-                                              <button
-                                                title="Save (Enter)"
-                                                onClick={() =>
-                                                  handleSaveInlineEdit(
-                                                    activePage!,
-                                                    row.id,
-                                                    col.key,
-                                                    inlineEdit.val,
-                                                  )
-                                                }
-                                                className="bg-green-600 hover:bg-green-700 text-white rounded px-3 py-1.5 text-xs font-bold shadow-sm transition-colors"
-                                              >
-                                                Save
-                                              </button>
+                                                  }}
+                                                  className="bg-green-600 hover:bg-green-700 text-white rounded px-4 py-1 text-xs font-bold shadow-sm"
+                                                >
+                                                  Save
+                                                </button>
+                                              </div>
                                             </div>
                                           )}
                                           <div
-                                            className="group flex items-center justify-center w-full h-full relative cursor-text min-h-[20px]"
+                                            className="group flex flex-wrap gap-1 items-center justify-center w-full h-full relative cursor-text min-h-[20px] p-1"
                                             onClick={() =>
                                               setInlineEdit({
                                                 id: `${row.id}-${col.key}`,
                                                 colKey: col.key,
-                                                val: String(rawVal || 0),
-                                                history: [String(rawVal || 0)],
+                                                val: rawVal
+                                                  ? String(rawVal)
+                                                  : JSON.stringify([]),
+                                                history: [],
                                                 historyPointer: 0,
                                               })
                                             }
                                           >
-                                            <span className="text-center w-full">
-                                              {rawVal || "0"}
-                                            </span>
-                                            <button className="hidden group-hover:block absolute right-1 text-gray-400 hover:text-blue-500 text-[10px]">
-                                              ✏️
+                                            {currentVal.length > 0 ? (
+                                              currentVal.map(
+                                                (s: any, idx: number) => (
+                                                  <div
+                                                    key={idx}
+                                                    className={`px-1.5 py-0.5 rounded text-[10px] font-bold border flex items-center gap-1 ${s.color}`}
+                                                  >
+                                                    <span className="opacity-70">
+                                                      {s.source}:
+                                                    </span>{" "}
+                                                    <span>{s.qty}</span>
+                                                  </div>
+                                                ),
+                                              )
+                                            ) : (
+                                              <span className="text-gray-400 text-xs italic">
+                                                0
+                                              </span>
+                                            )}
+                                            <button className="hidden group-hover:block absolute right-1 top-1/2 -translate-y-1/2 bg-white text-gray-500 hover:text-blue-600 rounded px-1 shadow border py-0.5 text-[10px] z-10">
+                                              ✏️ Edit
                                             </button>
                                           </div>
                                         </td>
@@ -3411,9 +3736,14 @@ function AppContent() {
       );
       const ids = new Set<string>();
       trackerRows.forEach((row) => {
-        const total = parseFloat(String(row.total_qty || 0)) || 0;
+        const getNum = (v: any) =>
+          parseMultiSource(v).reduce(
+            (sum: number, s: any) => sum + (parseFloat(s.qty) || 0),
+            0,
+          );
+        const total = getNum(row.total_qty);
         const totalSales = saleCols.reduce(
-          (sum, c) => sum + (parseFloat(String(row[c.key] || 0)) || 0),
+          (sum, c) => sum + getNum(row[c.key]),
           0,
         );
         const remaining = total - totalSales;
@@ -4240,8 +4570,16 @@ function AppContent() {
         isOpen={!!trackerSelectionModalSource}
         onClose={() => setTrackerSelectionModalSource(null)}
         sourcePage={trackerSelectionModalSource || ""}
-        sourceColumns={trackerSelectionModalSource ? (state.pageConfigs[trackerSelectionModalSource]?.columns || []) : []}
-        sourceRows={trackerSelectionModalSource ? (state.pageRows[trackerSelectionModalSource] || []) : []}
+        sourceColumns={
+          trackerSelectionModalSource
+            ? state.pageConfigs[trackerSelectionModalSource]?.columns || []
+            : []
+        }
+        sourceRows={
+          trackerSelectionModalSource
+            ? state.pageRows[trackerSelectionModalSource] || []
+            : []
+        }
         onConfirm={(selectedColKeys) => {
           if (trackerSelectionModalSource) {
             handleCreateTracker(trackerSelectionModalSource, selectedColKeys);
@@ -4501,7 +4839,13 @@ function AppContent() {
                       const matched = activeConfig.columns.find(
                         (c) =>
                           c.type === "sale_tracker" &&
-                          val.toLowerCase().split(' ').filter(Boolean).every(term => c.name.toLowerCase().includes(term)),
+                          val
+                            .toLowerCase()
+                            .split(" ")
+                            .filter(Boolean)
+                            .every((term) =>
+                              c.name.toLowerCase().includes(term),
+                            ),
                       );
                       if (matched) setSumStartCol(matched.key);
                     }
@@ -4512,7 +4856,13 @@ function AppContent() {
                     .filter(
                       (c) =>
                         c.type === "sale_tracker" &&
-                        (sumStartSearchQuery.toLowerCase().split(' ').filter(Boolean).every(term => c.name.toLowerCase().includes(term)) ||
+                        (sumStartSearchQuery
+                          .toLowerCase()
+                          .split(" ")
+                          .filter(Boolean)
+                          .every((term) =>
+                            c.name.toLowerCase().includes(term),
+                          ) ||
                           c.key === sumStartCol),
                     )
                     .map((c) => (
@@ -4527,7 +4877,11 @@ function AppContent() {
                   {activeConfig.columns.filter(
                     (c) =>
                       c.type === "sale_tracker" &&
-                      (sumStartSearchQuery.toLowerCase().split(' ').filter(Boolean).every(term => c.name.toLowerCase().includes(term)) ||
+                      (sumStartSearchQuery
+                        .toLowerCase()
+                        .split(" ")
+                        .filter(Boolean)
+                        .every((term) => c.name.toLowerCase().includes(term)) ||
                         c.key === sumStartCol),
                   ).length === 0 && (
                     <div className="p-3 text-sm text-gray-400 text-center italic font-semibold">
@@ -4551,13 +4905,17 @@ function AppContent() {
                     const val = e.target.value;
                     setSumEndSearchQuery(val);
                     if (val.trim() !== "") {
-                      const matched = [...activeConfig.columns]
-                        .reverse()
-                        .find(
-                          (c) =>
-                            c.type === "sale_tracker" &&
-                            val.toLowerCase().split(' ').filter(Boolean).every(term => c.name.toLowerCase().includes(term)),
-                        );
+                      const matched = [...activeConfig.columns].reverse().find(
+                        (c) =>
+                          c.type === "sale_tracker" &&
+                          val
+                            .toLowerCase()
+                            .split(" ")
+                            .filter(Boolean)
+                            .every((term) =>
+                              c.name.toLowerCase().includes(term),
+                            ),
+                      );
                       if (matched) setSumEndCol(matched.key);
                     }
                   }}
@@ -4567,7 +4925,13 @@ function AppContent() {
                     .filter(
                       (c) =>
                         c.type === "sale_tracker" &&
-                        (sumEndSearchQuery.toLowerCase().split(' ').filter(Boolean).every(term => c.name.toLowerCase().includes(term)) ||
+                        (sumEndSearchQuery
+                          .toLowerCase()
+                          .split(" ")
+                          .filter(Boolean)
+                          .every((term) =>
+                            c.name.toLowerCase().includes(term),
+                          ) ||
                           c.key === sumEndCol),
                     )
                     .map((c) => (
@@ -4582,7 +4946,11 @@ function AppContent() {
                   {activeConfig.columns.filter(
                     (c) =>
                       c.type === "sale_tracker" &&
-                      (sumEndSearchQuery.toLowerCase().split(' ').filter(Boolean).every(term => c.name.toLowerCase().includes(term)) ||
+                      (sumEndSearchQuery
+                        .toLowerCase()
+                        .split(" ")
+                        .filter(Boolean)
+                        .every((term) => c.name.toLowerCase().includes(term)) ||
                         c.key === sumEndCol),
                   ).length === 0 && (
                     <div className="p-3 text-sm text-gray-400 text-center italic font-semibold">
