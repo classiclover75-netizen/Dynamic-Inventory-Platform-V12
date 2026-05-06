@@ -3371,14 +3371,15 @@ function AppContent() {
                                                   const saleQty = currentSaleEntry ? currentSaleEntry.qty : 0;
 
                                                   return (
-                                                    <div key={idx} className="group flex items-center justify-between gap-2">
+                                                    <div key={idx} className="w-full relative">
                                                       {isThisRowEditing ? (
-                                                        <>
-                                                          <div className={`px-1.5 py-0.5 rounded text-[14px] font-bold border flex items-center gap-1 ${ts.color}`}>
+                                                        <div className={`w-full px-1.5 py-1.5 rounded text-[14px] font-bold border flex flex-col gap-2 ${ts.color}`}>
+                                                          <div className="flex items-center justify-between gap-1">
                                                             <span className="opacity-70">{ts.source}:</span>
                                                             <input
                                                               type="number"
-                                                              value={saleQty}
+                                                              value={saleQty === 0 ? "" : saleQty}
+                                                              placeholder="0"
                                                               onChange={(e) => {
                                                                 const copy = [...draftVal];
                                                                 const existingIdx = copy.findIndex((s: any) => s.source === ts.source);
@@ -3392,38 +3393,41 @@ function AppContent() {
                                                                 setInlineEdit((prev) => ({ ...prev!, val: JSON.stringify(copy) }));
                                                               }}
                                                               onWheel={(e) => e.currentTarget.blur()}
+                                                              onFocus={(e) => {
+                                                                setTimeout(() => e.target.select(), 0);
+                                                              }}
                                                               autoFocus
-                                                              className="w-16 bg-white/50 border border-blue-300 px-1 py-0.5 text-right font-bold text-[14px] rounded text-blue-800 outline-none focus:border-blue-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                              className="w-16 bg-white/70 border border-black/20 px-1 py-0.5 text-right font-bold text-[14px] rounded text-blue-800 outline-none focus:border-blue-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                                             />
                                                           </div>
-                                                          <div className="flex items-center gap-1 flex-shrink-0">
+                                                          <div className="flex items-center justify-end gap-1 flex-shrink-0 w-full overflow-hidden">
                                                             <button
                                                               onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 handleSaveInlineEdit(activePage!, row.id, col.key, inlineEdit!.val);
                                                               }}
-                                                              className="bg-green-600 hover:bg-green-700 text-white rounded p-1 shadow border w-6 h-6 flex items-center justify-center text-[10px] cursor-pointer transition-colors"
+                                                              className="bg-green-600 hover:bg-green-700 text-white rounded px-2 py-0.5 shadow-sm border border-green-800 text-xs font-semibold cursor-pointer transition-colors"
                                                               title="Save"
                                                             >
-                                                              💾
+                                                              Save
                                                             </button>
                                                             <button
                                                               onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 setInlineEdit(null);
                                                               }}
-                                                              className="bg-red-500 hover:bg-red-600 text-white rounded p-1 shadow border w-6 h-6 flex items-center justify-center text-[10px] cursor-pointer transition-colors"
+                                                              className="bg-red-500 hover:bg-red-600 text-white rounded px-2 py-0.5 shadow-sm border border-red-800 text-xs font-semibold cursor-pointer transition-colors"
                                                               title="Cancel"
                                                             >
-                                                              ❌
+                                                              Cancel
                                                             </button>
                                                           </div>
-                                                        </>
+                                                        </div>
                                                       ) : (
-                                                        <>
-                                                          <div className={`px-1.5 py-0.5 rounded text-[14px] font-bold border flex items-center gap-1 ${ts.color}`}>
-                                                            <span className="opacity-70">{ts.source}:</span>
-                                                            <span>{saleQty}</span>
+                                                        <div className={`group w-full px-1.5 py-0.5 rounded text-[14px] font-bold border flex items-center justify-between gap-1 ${ts.color}`}>
+                                                          <div className="flex items-center justify-between w-full">
+                                                            <span className="opacity-70 shrink-0">{ts.source}:</span>
+                                                            <span className="flex-1 text-right">{saleQty}</span>
                                                           </div>
                                                           <button
                                                             onClick={(e) => {
@@ -3436,12 +3440,12 @@ function AppContent() {
                                                                 historyPointer: 0,
                                                               });
                                                             }}
-                                                            className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 bg-white text-gray-500 hover:text-blue-600 rounded p-1 shadow border w-6 h-6 flex items-center justify-center text-[10px] cursor-pointer"
+                                                            className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 bg-white/60 hover:bg-white text-gray-700 rounded p-1 shadow-sm border border-black/10 w-6 h-6 flex items-center justify-center text-[10px] cursor-pointer ml-1"
                                                             title="Edit sale"
                                                           >
                                                             ✏️
                                                           </button>
-                                                        </>
+                                                        </div>
                                                       )}
                                                     </div>
                                                   );
