@@ -3402,7 +3402,7 @@ function AppContent() {
 
                                                       {isThisRowEditing && (
                                                         <div 
-                                                          className="absolute z-[999999] top-1/2 -translate-y-1/2 right-0 bg-white p-3 rounded-lg shadow-[0_5px_20px_rgba(0,0,0,0.5)] border-[3px] flex flex-col gap-4 min-w-[240px]"
+                                                          className="absolute z-[999999] bottom-0 right-0 bg-white p-3 rounded-lg shadow-[0_5px_20px_rgba(0,0,0,0.5)] border-[3px] flex flex-col gap-4 min-w-[240px]"
                                                           style={{ borderColor: ts.color?.includes('blue') ? '#3b82f6' : ts.color?.includes('green') ? '#22c55e' : ts.color?.includes('yellow') ? '#eab308' : ts.color?.includes('red') ? '#ef4444' : ts.color?.includes('purple') ? '#a855f7' : '#94a3b8' }}
                                                           onClick={(e) => e.stopPropagation()}
                                                         >
