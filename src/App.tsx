@@ -3402,9 +3402,9 @@ function AppContent() {
                                                             setInlineEdit(
                                                               (prev) => ({
                                                                 ...prev!,
-                                                                val: JSON.stringify(
+                                                                val: copy.length > 0 ? JSON.stringify(
                                                                   copy,
-                                                                ),
+                                                                ) : "",
                                                               }),
                                                             );
                                                           }}

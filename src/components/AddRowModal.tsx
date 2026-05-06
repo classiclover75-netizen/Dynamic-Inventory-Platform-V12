@@ -556,7 +556,7 @@ export const AddRowModal = React.memo(({
                                 }}/>
                                 <button type="button" className="text-red-500 font-bold px-1 hover:text-red-700" onClick={() => {
                                   const copy = currentSources.filter((_: any, k: number) => k !== idx);
-                                  handleUpdateField(i, col.key, JSON.stringify(copy));
+                                  handleUpdateField(i, col.key, copy.length > 0 ? JSON.stringify(copy) : "");
                                 }}>X</button>
                               </div>
                             ))}
