@@ -3302,7 +3302,7 @@ function AppContent() {
                                               ),
                                             )}
                                             {remainingSources.length === 0 && (
-                                              <span className="text-gray-400 text-[14px] italic">
+                                              <span className="inline-block bg-red-50 text-red-600 font-extrabold text-[14px] px-2 py-0.5 rounded border border-red-200 shadow-sm">
                                                 0
                                               </span>
                                             )}
@@ -3335,7 +3335,7 @@ function AppContent() {
                                               ),
                                             )}
                                             {totalSources.length === 0 && (
-                                              <span className="text-gray-400 text-[14px] italic">
+                                              <span className="inline-block bg-red-50 text-red-600 font-extrabold text-[14px] px-2 py-0.5 rounded border border-red-200 shadow-sm">
                                                 0
                                               </span>
                                             )}
@@ -3353,6 +3353,7 @@ function AppContent() {
                                       );
                                       const currentVal =
                                         parseMultiSource(rawVal);
+                                      const draftVal = isEditing ? parseMultiSource(inlineEdit.val) : currentVal;
 
                                       return (
                                         <td
@@ -3374,7 +3375,7 @@ function AppContent() {
                                                 {totalSources.map(
                                                   (src: any, idx: number) => {
                                                     const currentSaleEntry =
-                                                      currentVal.find(
+                                                      draftVal.find(
                                                         (s: any) =>
                                                           s.source ===
                                                           src.source,
@@ -3398,7 +3399,7 @@ function AppContent() {
                                                           value={saleQty}
                                                           onChange={(e) => {
                                                             const copy = [
-                                                              ...currentVal,
+                                                              ...draftVal,
                                                             ];
                                                             const existingIdx =
                                                               copy.findIndex(
@@ -3510,7 +3511,7 @@ function AppContent() {
                                               )
                                             ) : (
                                               <div className="group flex items-center justify-between gap-2">
-                                                <span className="text-gray-400 text-[14px] italic">
+                                                <span className="inline-block bg-red-50 text-red-600 font-extrabold text-[14px] px-2 py-0.5 rounded border border-red-200 shadow-sm">
                                                   0
                                                 </span>
                                                 <button
