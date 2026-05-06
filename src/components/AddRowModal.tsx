@@ -525,7 +525,13 @@ export const AddRowModal = React.memo(
         for (const col of editableCols) {
           let val = block[col.key];
 
-          if (col.type === "number" && val) {
+          if (
+            col.type === "number" &&
+            col.key !== "total_qty" &&
+            val !== undefined &&
+            val !== null &&
+            String(val).trim() !== ""
+          ) {
             const num = Number(val);
             if (Number.isNaN(num)) {
               numberError = true;
@@ -727,11 +733,11 @@ export const AddRowModal = React.memo(
                                     (src: any, idx: number) => (
                                       <div
                                         key={idx}
-                                        className="flex gap-2 items-center bg-white p-2 rounded shadow-sm border border-purple-100"
+                                        className="flex flex-wrap sm:flex-nowrap w-full box-border gap-2 items-center bg-white p-2 rounded shadow-sm border border-purple-100"
                                       >
                                         <input
                                           type="text"
-                                          className={`text-[10px] px-1.5 py-0.5 rounded font-bold border border-transparent hover:border-gray-300 outline-none flex-1 truncate transition-colors ${src.color}`}
+                                          className={`text-[10px] px-1.5 py-0.5 rounded font-bold border border-transparent hover:border-gray-300 outline-none flex-1 min-w-[60px] max-w-[120px] truncate transition-colors ${src.color}`}
                                           value={src.source}
                                           onChange={(e) => {
                                             const copy = [...currentSources];
@@ -748,7 +754,7 @@ export const AddRowModal = React.memo(
                                           onWheel={(e) =>
                                             e.currentTarget.blur()
                                           }
-                                          className="w-16 h-6 text-xs px-1 text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                          className="flex-1 min-w-[60px] max-w-[120px] h-6 text-xs px-1 text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                           value={src.qty}
                                           onChange={(e) => {
                                             const copy = [...currentSources];
@@ -783,10 +789,10 @@ export const AddRowModal = React.memo(
                                     ),
                                   )}
                                 </div>
-                                <div className="flex flex-wrap sm:flex-nowrap gap-1 items-center pt-2 border-t border-purple-200 mt-auto">
+                                <div className="flex flex-wrap sm:flex-nowrap gap-2 items-center w-full box-border pt-2 border-t border-purple-200 mt-auto">
                                   <Input
                                     placeholder="Source"
-                                    className="flex-1 h-7 text-xs px-1 min-w-[60px]"
+                                    className="flex-1 h-7 text-xs px-1 min-w-[80px]"
                                     value={newSourceInput.source}
                                     onChange={(e) =>
                                       setNewSourceInputs({
@@ -802,7 +808,7 @@ export const AddRowModal = React.memo(
                                     type="number"
                                     onWheel={(e) => e.currentTarget.blur()}
                                     placeholder="Qty"
-                                    className="w-16 h-7 text-xs px-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                    className="flex-1 min-w-[60px] max-w-[100px] h-7 text-xs px-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                     value={newSourceInput.qty}
                                     onChange={(e) =>
                                       setNewSourceInputs({
@@ -869,10 +875,10 @@ export const AddRowModal = React.memo(
                                     return (
                                       <div
                                         key={idx}
-                                        className="flex gap-2 items-center bg-white p-1 rounded shadow-sm border border-gray-100"
+                                        className="flex flex-wrap sm:flex-nowrap w-full box-border gap-2 items-center bg-white p-1 rounded shadow-sm border border-gray-100"
                                       >
                                         <span
-                                          className={`text-[10px] px-1.5 py-0.5 rounded font-bold flex-1 truncate ${ts.color}`}
+                                          className={`text-[10px] px-1.5 py-0.5 rounded font-bold flex-1 min-w-[60px] max-w-[120px] truncate ${ts.color}`}
                                         >
                                           {ts.source}
                                         </span>
@@ -881,7 +887,7 @@ export const AddRowModal = React.memo(
                                           onWheel={(e) =>
                                             e.currentTarget.blur()
                                           }
-                                          className="w-16 h-6 text-xs px-1 text-right text-blue-800 font-bold ml-auto [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                          className="flex-1 min-w-[60px] max-w-[120px] h-6 text-xs px-1 text-right text-blue-800 font-bold ml-auto [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                           value={saleQty}
                                           placeholder="Qty"
                                           onChange={(e) => {
