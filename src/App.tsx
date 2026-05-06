@@ -3345,193 +3345,113 @@ function AppContent() {
                                     }
 
                                     if (col.type === "sale_tracker") {
-                                      const isEditing =
-                                        inlineEdit?.id ===
-                                        `${row.id}-${col.key}`;
                                       const totalSources = parseMultiSource(
                                         row.total_qty,
                                       );
                                       const currentVal =
                                         parseMultiSource(rawVal);
-                                      const draftVal = isEditing ? parseMultiSource(inlineEdit.val) : currentVal;
+                                      
+                                      const isCellEditing = inlineEdit?.id?.startsWith(`${row.id}-${col.key}-`);
+                                      const draftVal = isCellEditing ? parseMultiSource(inlineEdit!.val) : currentVal;
 
                                       return (
                                         <td
                                           key={col.key}
                                           {...commonProps}
-                                          className={`p-1.5 border-r-[length:medium] border-b-[length:medium] border-[#e0e0e0] ${hoverClass} text-xs relative ${isEditing ? "" : "overflow-hidden"}`}
+                                          className={`p-1.5 border-r-[length:medium] border-b-[length:medium] border-[#e0e0e0] ${hoverClass} text-xs relative overflow-hidden`}
                                         >
-                                          {isEditing && (
-                                            <div
-                                              className="absolute z-[999] top-[50%] right-full sm:right-auto sm:left-1/2 -translate-y-1/2 -translate-x-0 sm:-translate-x-1/2 bg-white p-3 rounded-lg shadow-xl border-2 border-[#2b579a] min-w-[280px]"
-                                              onClick={(e) =>
-                                                e.stopPropagation()
-                                              }
-                                            >
-                                              <div className="flex flex-col gap-2">
-                                                <div className="font-bold text-gray-700 mb-1">
-                                                  Sales per Source
-                                                </div>
-                                                {totalSources.map(
-                                                  (src: any, idx: number) => {
-                                                    const currentSaleEntry =
-                                                      draftVal.find(
-                                                        (s: any) =>
-                                                          s.source ===
-                                                          src.source,
-                                                      );
-                                                    const saleQty =
-                                                      currentSaleEntry
-                                                        ? currentSaleEntry.qty
-                                                        : 0;
-                                                    return (
-                                                      <div
-                                                        key={idx}
-                                                        className="flex items-center gap-2 bg-gray-50 p-1 rounded justify-between px-2"
-                                                      >
-                                                        <span
-                                                          className={`text-xs px-2 py-0.5 rounded font-bold border ${src.color}`}
-                                                        >
-                                                          {src.source}
-                                                        </span>
-                                                        <input
-                                                          type="number"
-                                                          value={saleQty}
-                                                          onChange={(e) => {
-                                                            const copy = [
-                                                              ...draftVal,
-                                                            ];
-                                                            const existingIdx =
-                                                              copy.findIndex(
-                                                                (s: any) =>
-                                                                  s.source ===
-                                                                  src.source,
-                                                              );
-                                                            if (
-                                                              existingIdx >= 0
-                                                            ) {
-                                                              copy[
-                                                                existingIdx
-                                                              ].qty =
-                                                                parseFloat(
-                                                                  e.target
-                                                                    .value,
-                                                                ) || 0;
-                                                            } else {
-                                                              copy.push({
-                                                                source:
-                                                                  src.source,
-                                                                qty:
-                                                                  parseFloat(
-                                                                    e.target
-                                                                      .value,
-                                                                  ) || 0,
-                                                                color:
-                                                                  src.color,
-                                                              });
-                                                            }
-                                                            setInlineEdit(
-                                                              (prev) => ({
-                                                                ...prev!,
-                                                                val: JSON.stringify(
-                                                                  copy,
-                                                                ),
-                                                              }),
-                                                            );
-                                                          }}
-                                                          onWheel={(e) =>
-                                                            e.currentTarget.blur()
-                                                          }
-                                                          className="w-20 border px-1 py-0.5 text-right font-bold text-xs rounded text-blue-800 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                                        />
-                                                      </div>
-                                                    );
-                                                  },
-                                                )}
-                                              </div>
-
-                                              <div className="flex items-center justify-end gap-2 mt-3 pt-2 border-t">
-                                                <button
-                                                  onClick={() =>
-                                                    setInlineEdit(null)
-                                                  }
-                                                  className="text-gray-500 hover:text-gray-800 px-3 py-1 text-xs font-bold"
-                                                >
-                                                  Cancel
-                                                </button>
-                                                <button
-                                                  onClick={() => {
-                                                    handleSaveInlineEdit(
-                                                      activePage!,
-                                                      row.id,
-                                                      col.key,
-                                                      inlineEdit.val,
-                                                    );
-                                                  }}
-                                                  className="bg-green-600 hover:bg-green-700 text-white rounded px-4 py-1 text-xs font-bold shadow-sm"
-                                                >
-                                                  Save
-                                                </button>
-                                              </div>
-                                            </div>
-                                          )}
                                           <div className="flex flex-col gap-1 justify-center w-full h-full min-h-[20px] p-1.5">
-                                            {currentVal.length > 0 ? (
-                                              currentVal.map(
-                                                (s: any, idx: number) => (
-                                                  <div key={idx} className="group flex items-center justify-between gap-2">
-                                                    <div
-                                                      className={`px-1.5 py-0.5 rounded text-[14px] font-bold border flex items-center gap-1 ${s.color}`}
-                                                    >
-                                                      <span className="opacity-70">
-                                                        {s.source}:
-                                                      </span>{" "}
-                                                      <span>{s.qty}</span>
+                                            {totalSources.length > 0 ? (
+                                              totalSources.map(
+                                                (ts: any, idx: number) => {
+                                                  const isThisRowEditing = inlineEdit?.id === `${row.id}-${col.key}-${ts.source}`;
+                                                  const currentSaleEntry = (isThisRowEditing ? draftVal : currentVal).find(
+                                                    (s: any) => s.source === ts.source
+                                                  );
+                                                  const saleQty = currentSaleEntry ? currentSaleEntry.qty : 0;
+
+                                                  return (
+                                                    <div key={idx} className="group flex items-center justify-between gap-2">
+                                                      {isThisRowEditing ? (
+                                                        <>
+                                                          <div className={`px-1.5 py-0.5 rounded text-[14px] font-bold border flex items-center gap-1 ${ts.color}`}>
+                                                            <span className="opacity-70">{ts.source}:</span>
+                                                            <input
+                                                              type="number"
+                                                              value={saleQty}
+                                                              onChange={(e) => {
+                                                                const copy = [...draftVal];
+                                                                const existingIdx = copy.findIndex((s: any) => s.source === ts.source);
+                                                                let newQty = parseFloat(e.target.value);
+                                                                if (isNaN(newQty)) newQty = 0;
+                                                                if (existingIdx >= 0) {
+                                                                  copy[existingIdx].qty = newQty;
+                                                                } else {
+                                                                  copy.push({ source: ts.source, qty: newQty, color: ts.color });
+                                                                }
+                                                                setInlineEdit((prev) => ({ ...prev!, val: JSON.stringify(copy) }));
+                                                              }}
+                                                              onWheel={(e) => e.currentTarget.blur()}
+                                                              autoFocus
+                                                              className="w-16 bg-white/50 border border-blue-300 px-1 py-0.5 text-right font-bold text-[14px] rounded text-blue-800 outline-none focus:border-blue-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                            />
+                                                          </div>
+                                                          <div className="flex items-center gap-1 flex-shrink-0">
+                                                            <button
+                                                              onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleSaveInlineEdit(activePage!, row.id, col.key, inlineEdit!.val);
+                                                              }}
+                                                              className="bg-green-600 hover:bg-green-700 text-white rounded p-1 shadow border w-6 h-6 flex items-center justify-center text-[10px] cursor-pointer transition-colors"
+                                                              title="Save"
+                                                            >
+                                                              💾
+                                                            </button>
+                                                            <button
+                                                              onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setInlineEdit(null);
+                                                              }}
+                                                              className="bg-red-500 hover:bg-red-600 text-white rounded p-1 shadow border w-6 h-6 flex items-center justify-center text-[10px] cursor-pointer transition-colors"
+                                                              title="Cancel"
+                                                            >
+                                                              ❌
+                                                            </button>
+                                                          </div>
+                                                        </>
+                                                      ) : (
+                                                        <>
+                                                          <div className={`px-1.5 py-0.5 rounded text-[14px] font-bold border flex items-center gap-1 ${ts.color}`}>
+                                                            <span className="opacity-70">{ts.source}:</span>
+                                                            <span>{saleQty}</span>
+                                                          </div>
+                                                          <button
+                                                            onClick={(e) => {
+                                                              e.stopPropagation();
+                                                              setInlineEdit({
+                                                                id: `${row.id}-${col.key}-${ts.source}`,
+                                                                colKey: col.key,
+                                                                val: rawVal ? String(rawVal) : JSON.stringify([]),
+                                                                history: [],
+                                                                historyPointer: 0,
+                                                              });
+                                                            }}
+                                                            className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 bg-white text-gray-500 hover:text-blue-600 rounded p-1 shadow border w-6 h-6 flex items-center justify-center text-[10px] cursor-pointer"
+                                                            title="Edit sale"
+                                                          >
+                                                            ✏️
+                                                          </button>
+                                                        </>
+                                                      )}
                                                     </div>
-                                                    <button
-                                                      onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setInlineEdit({
-                                                          id: `${row.id}-${col.key}`,
-                                                          colKey: col.key,
-                                                          val: rawVal
-                                                            ? String(rawVal)
-                                                            : JSON.stringify([]),
-                                                          history: [],
-                                                          historyPointer: 0,
-                                                        });
-                                                      }}
-                                                      className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 bg-white text-gray-500 hover:text-blue-600 rounded p-1 shadow border w-6 h-6 flex items-center justify-center text-[10px] cursor-pointer"
-                                                      title="Edit sale"
-                                                    >
-                                                      ✏️
-                                                    </button>
-                                                  </div>
-                                                ),
+                                                  );
+                                                }
                                               )
                                             ) : (
                                               <div className="group flex items-center justify-between gap-2">
                                                 <span className="inline-block bg-red-50 text-red-600 font-extrabold text-[14px] px-2 py-0.5 rounded border border-red-200 shadow-sm">
                                                   0
                                                 </span>
-                                                <button
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setInlineEdit({
-                                                      id: `${row.id}-${col.key}`,
-                                                      colKey: col.key,
-                                                      val: rawVal
-                                                        ? String(rawVal)
-                                                        : JSON.stringify([]),
-                                                      history: [],
-                                                      historyPointer: 0,
-                                                    });
-                                                  }}
-                                                  className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 bg-white text-gray-500 hover:text-blue-600 rounded p-1 shadow border w-6 h-6 flex items-center justify-center text-[10px] cursor-pointer"
-                                                  title="Edit sale"
-                                                >
-                                                  ✏️
-                                                </button>
                                               </div>
                                             )}
                                           </div>
