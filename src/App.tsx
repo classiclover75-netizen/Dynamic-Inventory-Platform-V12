@@ -2875,6 +2875,8 @@ function AppContent() {
                           isGhost && !ghostIds.has(String(row.id))
                         );
 
+                        const isRowEditing = inlineEdit?.id?.startsWith(String(row.id) + "-");
+
                         const draggableProps: any = {
                           draggableId: `${isSecondary ? "sec-" : ""}${row.id}`,
                           index: rowIndex,
@@ -2890,13 +2892,14 @@ function AppContent() {
                               <tr
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
-                                className={`${!isSecondary && selectedRowIds.has(row.id) ? "bg-[#e8f0fe]" : ""} ${snapshot.isDragging ? "bg-[#e8f0fe] shadow-xl table" : ""}`}
+                                className={`${!isSecondary && selectedRowIds.has(row.id) ? "bg-[#e8f0fe]" : ""} ${snapshot.isDragging ? "bg-[#e8f0fe] shadow-xl table" : ""} ${isRowEditing ? "relative z-[60]" : ""}`}
                                 style={{
                                   ...provided.draggableProps.style,
                                   ...(snapshot.isDragging && {
                                     display: "table",
                                     tableLayout: "fixed",
                                   }),
+                                  ...(isRowEditing ? { position: "relative", zIndex: 60 } : {}),
                                   height: `${config.rowHeight || 100}px`,
                                 }}
                               >
