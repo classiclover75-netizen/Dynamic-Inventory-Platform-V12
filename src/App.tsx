@@ -3376,7 +3376,7 @@ function AppContent() {
                                                   const originalQty = originalSaleEntry ? originalSaleEntry.qty : 0;
 
                                                   return (
-                                                    <div key={idx} className="w-full relative">
+                                                    <div key={idx} className="w-full">
                                                       <div className={`group w-full px-1.5 py-0.5 rounded text-[14px] font-bold border flex items-center justify-between gap-1 ${ts.color}`}>
                                                         <div className="flex items-center justify-between w-full">
                                                           <span className="opacity-70 shrink-0">{ts.source}:</span>
