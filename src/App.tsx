@@ -2703,7 +2703,7 @@ function AppContent() {
         : 0;
     const colSpan =
       visibleColumns.length +
-      (!isSecondary && config.rowReorderEnabled ? 1 : 0);
+      (!isSecondary && config.rowReorderEnabled ? 1 : 0) + 1;
 
     const colTokensMap: Record<string, string[]> = {};
     visibleColumns.forEach((col) => {
@@ -2769,7 +2769,7 @@ function AppContent() {
           <table
             className="border-separate border-spacing-0 table-fixed w-max max-w-none text-[14px] font-normal"
             style={{
-              width: `${appTable.getTotalSize() + (!isSecondary && config.rowReorderEnabled ? 60 : 0)}px`,
+              width: `${appTable.getTotalSize() + (!isSecondary && config.rowReorderEnabled ? 60 : 0) + 50}px`,
             }}
             onMouseOver={handleTableMouseOver}
             onMouseOut={handleTableMouseOut}
@@ -2883,6 +2883,7 @@ function AppContent() {
                     </th>
                   );
                 })}
+                <th className="border-none bg-transparent pointer-events-none" style={{ width: "50px", minWidth: "50px", maxWidth: "50px" }}></th>
               </tr>
             </thead>
             <Droppable
@@ -3597,6 +3598,7 @@ function AppContent() {
                                     </td>
                                   );
                                 })}
+                                <td className="border-none bg-transparent pointer-events-none" style={{ width: "50px", minWidth: "50px", maxWidth: "50px" }}></td>
                               </tr>
                             )}
                           </Draggable>
