@@ -157,7 +157,8 @@ const parseMultiSource = (val: any) => {
   try {
     if (!val) return [];
     const parsed = typeof val === "string" ? JSON.parse(val) : val;
-    return Array.isArray(parsed) ? parsed : [];
+    const arr = Array.isArray(parsed) ? parsed : [];
+    return arr.sort((a, b) => String(a.source || "").localeCompare(String(b.source || "")));
   } catch (e) {
     return [
       {
