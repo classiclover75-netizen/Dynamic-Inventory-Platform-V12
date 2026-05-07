@@ -3458,7 +3458,6 @@ function AppContent() {
                                                             <input
                                                               type="number"
                                                               value={saleQty === 0 ? "" : saleQty}
-                                                              placeholder="0"
                                                               onChange={(e) => {
                                                                 const copy = [...draftVal];
                                                                 const existingIdx = copy.findIndex((s: any) => s.source === ts.source);
