@@ -1884,6 +1884,7 @@ function AppContent() {
 
   const handleApplySourceToAll = async (pageName: string, colKey: string, sourceName: string, sourceColor: string) => {
     setBulkApplyContext({ pageName, colKey, sourceName, sourceColor });
+    toggleModal("addRow", false);
     toggleModal("bulkApplySource", true);
   };
 
