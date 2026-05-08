@@ -190,8 +190,8 @@ export const BulkApplySourceModal: React.FC<BulkApplySourceModalProps> = ({
       noScroll={true}
     >
       <div className="flex flex-col h-[85vh] p-4">
-        <div className="flex gap-4 mb-4 shrink-0 items-center">
-          <div className="relative flex-1">
+        <div className="flex gap-4 mb-4 shrink-0 items-center justify-between">
+          <div className="relative flex-1 max-w-md">
             <Search className="absolute left-2 top-2.5 text-gray-400" size={16} />
             <Input
               className="pl-8"
@@ -199,6 +199,30 @@ export const BulkApplySourceModal: React.FC<BulkApplySourceModalProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                const newSelected = new Set(selectedRowIds);
+                filteredRows.forEach((r) => newSelected.add(String(r.id)));
+                setSelectedRowIds(newSelected);
+              }}
+              className="px-3 py-1.5 h-auto text-sm"
+            >
+              Select All
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                const newSelected = new Set(selectedRowIds);
+                filteredRows.forEach((r) => newSelected.delete(String(r.id)));
+                setSelectedRowIds(newSelected);
+              }}
+              className="px-3 py-1.5 h-auto text-sm"
+            >
+              Select None
+            </Button>
           </div>
         </div>
 
@@ -232,10 +256,12 @@ export const BulkApplySourceModal: React.FC<BulkApplySourceModalProps> = ({
                 return (
                   <tr
                     key={row.id}
-                    className="hover:bg-gray-50 cursor-pointer"
-                    onClick={() => handleToggleRow(String(row.id))}
+                    className="hover:bg-gray-50"
                   >
-                    <td className="p-2 border text-center">
+                    <td 
+                      className="p-2 border text-center cursor-pointer"
+                      onClick={() => handleToggleRow(String(row.id))}
+                    >
                       <input
                         type="checkbox"
                         checked={isSelected}
@@ -243,6 +269,7 @@ export const BulkApplySourceModal: React.FC<BulkApplySourceModalProps> = ({
                           handleToggleRow(String(row.id), e as any);
                         }}
                         className="w-4 h-4 cursor-pointer align-middle accent-[#2b579a]"
+                        onClick={(e) => e.stopPropagation()}
                       />
                     </td>
                     {columns.filter(col => !col.archived).map((c) => {
