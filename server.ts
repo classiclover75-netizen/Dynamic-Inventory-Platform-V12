@@ -626,7 +626,11 @@ app.get('/api/export-zip', async (req, res) => {
       archive.append(JSON.stringify(specificState, null, 2), { name: 'data.json' });
     }
 
-    archive.directory(UPLOADS_DIR, 'uploads');
+    if (fs.existsSync(UPLOADS_DIR)) {
+      archive.directory(UPLOADS_DIR, 'uploads');
+    } else {
+      archive.append(null, { name: 'uploads/' });
+    }
 
     await archive.finalize();
   } catch (err) {
