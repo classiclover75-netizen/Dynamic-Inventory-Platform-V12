@@ -124,28 +124,53 @@ export const CreateTrackerSelectionModal: React.FC<
   };
 
   const filteredRows = useMemo(() => {
-    if (!deferredSearchQuery) return sourceRows;
-    const tokens = deferredSearchQuery
-      .trim()
-      .toLowerCase()
-      .split(/\s+/)
-      .filter(Boolean);
+    if (!deferredSearchQuery.trim()) return sourceRows;
+    const activeQueries = [deferredSearchQuery.trim()].filter(Boolean);
 
     return sourceRows.filter((row) => {
-      const searchableValues = sourceColumns.map((col) => {
+      const colData = sourceColumns.map((col) => {
+        if (col.key === "sr" || col.type === "image" || col.type === "file") return null;
         const val = getCellValue(row, col);
-        return val !== null && val !== undefined ? String(val) : "";
-      });
-      const blob = searchableValues
-        .join(" ")
-        .replace(/<[^>]*>/g, "")
-        .replace(/<br\s*\/?>/gi, " ")
-        .replace(/&nbsp;/gi, " ")
-        .toLowerCase();
+        const strVal = Array.isArray(val) ? val.join(" ") : val !== null && val !== undefined ? String(val) : "";
+        const cleanVal = strVal.replace(/<[^>]*>/g, "").replace(/<br\s*\/?>/gi, " ").replace(/&nbsp;/gi, " ").toLowerCase();
+        return { name: col.name.toLowerCase(), val: cleanVal };
+      }).filter(Boolean) as { name: string; val: string }[];
 
-      return tokens.every((t) => {
-        const escaped = t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        return new RegExp(escaped, "i").test(blob);
+      const globalBlob = colData.map((c) => c.val).join(" ");
+
+      return activeQueries.some((query) => {
+        let targetBlob = globalBlob;
+        let searchString = query.toLowerCase();
+        const colonIndex = searchString.indexOf(":");
+        if (colonIndex > 0) {
+          const prefix = searchString.substring(0, colonIndex).trim();
+          const suffix = searchString.substring(colonIndex + 1).trim();
+          const matchedCol = colData.find((c) => c.name.includes(prefix) || prefix.includes(c.name));
+          if (matchedCol) {
+            targetBlob = matchedCol.val;
+            searchString = suffix;
+          }
+        }
+        const tokens = searchString.split(/\s+/).filter(Boolean);
+        if (tokens.length === 0) return true;
+        return tokens.every((t) => {
+          const escaped = t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          let bStart = "";
+          let bEnd = "";
+          if (/^[0-9]/.test(t)) {
+            bStart = "";
+            bEnd = "";
+          } else if (/^[a-zA-Z]/.test(t)) {
+            if (t.length <= 2) {
+              bStart = "(?<![a-zA-Z])";
+              bEnd = "(?![a-zA-Z]{2,})";
+            } else {
+              bStart = "";
+              bEnd = "";
+            }
+          }
+          return new RegExp(bStart + escaped + bEnd, "i").test(targetBlob);
+        });
       });
     });
   }, [sourceRows, sourceColumns, deferredSearchQuery]);

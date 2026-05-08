@@ -186,36 +186,52 @@ export const ExcelImportModal = React.memo(({ isOpen, onClose, onBack, onImport,
   };
 
   const finalRows = useMemo(() => {
-    if (!deferredSearchQuery) return importRows;
-    const tokens = deferredSearchQuery.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    if (!deferredSearchQuery.trim()) return importRows;
+    const activeQueries = [deferredSearchQuery.trim()].filter(Boolean);
     
     return importRows.filter(r => {
-      const searchableValues = Object.values(r).map(val => 
-        val !== null && val !== undefined ? String(val) : ''
-      );
-      const blob = searchableValues.join(' ')
-        .replace(/<[^>]*>/g, '')
-        .replace(/<br\s*\/?>/gi, ' ')
-        .replace(/&nbsp;/gi, ' ')
-        .toLowerCase();
-      
-      return tokens.every(t => {
-        const escaped = t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        let bStart = '';
-        let bEnd = '';
-        if (/^[0-9]/.test(t)) {
-          bStart = '(?<![0-9])';
-          bEnd = ''; 
-        } else if (/^[a-zA-Z]/.test(t)) {
-          if (t.length <= 2) {
-            bStart = '(?<![a-zA-Z])';
-            bEnd = '(?![a-zA-Z]{2,})'; 
-          } else {
-            bStart = '';
-            bEnd = '';
+      const colData = Object.entries(r).map(([key, val]) => {
+        if (key === "_id") return null;
+        const strVal = Array.isArray(val) ? val.join(" ") : val !== null && val !== undefined ? String(val) : "";
+        const cleanVal = strVal.replace(/<[^>]*>/g, "").replace(/<br\s*\/?>/gi, " ").replace(/&nbsp;/gi, " ").toLowerCase();
+        return { name: key.toLowerCase(), val: cleanVal };
+      }).filter(Boolean) as { name: string; val: string }[];
+
+      const globalBlob = colData.map((c) => c.val).join(" ");
+
+      return activeQueries.some((query) => {
+        let targetBlob = globalBlob;
+        let searchString = query.toLowerCase();
+        const colonIndex = searchString.indexOf(":");
+        if (colonIndex > 0) {
+          const prefix = searchString.substring(0, colonIndex).trim();
+          const suffix = searchString.substring(colonIndex + 1).trim();
+          const matchedCol = colData.find((c) => c.name.includes(prefix) || prefix.includes(c.name));
+          if (matchedCol) {
+            targetBlob = matchedCol.val;
+            searchString = suffix;
           }
         }
-        return new RegExp(bStart + escaped + bEnd, 'i').test(blob);
+        const tokens = searchString.split(/\s+/).filter(Boolean);
+        if (tokens.length === 0) return true;
+        return tokens.every((t) => {
+          const escaped = t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          let bStart = "";
+          let bEnd = "";
+          if (/^[0-9]/.test(t)) {
+            bStart = "";
+            bEnd = "";
+          } else if (/^[a-zA-Z]/.test(t)) {
+            if (t.length <= 2) {
+              bStart = "(?<![a-zA-Z])";
+              bEnd = "(?![a-zA-Z]{2,})";
+            } else {
+              bStart = "";
+              bEnd = "";
+            }
+          }
+          return new RegExp(bStart + escaped + bEnd, "i").test(targetBlob);
+        });
       });
     });
   }, [importRows, deferredSearchQuery]);
