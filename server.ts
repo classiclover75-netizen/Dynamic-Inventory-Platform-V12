@@ -658,10 +658,11 @@ app.get('/api/export-zip', async (req, res) => {
 
     for (const pName of pagesToExport) {
       const cleanFileName = pName.replace(/[^a-zA-Z0-9_\- ]/g, '').trim() || 'Untitled';
+      const rowsToExport = state.pageRows?.[pName] || [];
       const pageData = {
         name: pName,
         config: state.pageConfigs?.[pName] || {},
-        rows: state.pageRows?.[pName] || []
+        rows: rowsToExport
       };
       archive.append(JSON.stringify(pageData, null, 2), { name: `${cleanFileName}.json` });
     }
