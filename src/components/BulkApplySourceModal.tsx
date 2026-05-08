@@ -54,13 +54,39 @@ export const BulkApplySourceModal: React.FC<BulkApplySourceModalProps> = ({
   }, [isOpen, rows]);
 
   const filteredRows = useMemo(() => {
-    if (!searchQuery) return rows;
-    const lowerQuery = searchQuery.toLowerCase();
+    if (!searchQuery.trim()) return rows;
+    const activeQueries = [searchQuery.trim()].filter(Boolean);
+    
     return rows.filter((row) => {
-      return columns.some((col) => {
+      const colData = columns.map((col) => {
+        if (col.key === "sr" || col.type === "image" || col.type === "file") return null;
         const val = row[col.key];
-        const stringVal = Array.isArray(val) ? JSON.stringify(val) : String(val || "");
-        return decodeHtmlEntities(stringVal).toLowerCase().includes(lowerQuery);
+        const strVal = Array.isArray(val) ? val.map((v: any) => (typeof v === 'object' ? JSON.stringify(v) : v)).join(" ") : val !== null && val !== undefined ? String(val) : "";
+        const cleanVal = decodeHtmlEntities(strVal).replace(/<!--[\s\S]*?-->/g, "").replace(/<br\s*\/?>/gi, " ").replace(/&nbsp;/gi, " ").toLowerCase();
+        return { name: col.name.toLowerCase(), val: cleanVal };
+      }).filter(Boolean) as { name: string; val: string }[];
+
+      const globalBlob = colData.map((c) => c.val).join(" ");
+
+      return activeQueries.some((query) => {
+        let targetBlob = globalBlob;
+        let searchString = query.toLowerCase();
+        const colonIndex = searchString.indexOf(":");
+        if (colonIndex > 0) {
+          const prefix = searchString.substring(0, colonIndex).trim();
+          const suffix = searchString.substring(colonIndex + 1).trim();
+          const matchedCol = colData.find((c) => c.name.includes(prefix) || prefix.includes(c.name));
+          if (matchedCol) {
+            targetBlob = matchedCol.val;
+            searchString = suffix;
+          }
+        }
+        const tokens = searchString.split(/\s+/).filter(Boolean);
+        if (tokens.length === 0) return true;
+        return tokens.every((t) => {
+          const escaped = t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          return new RegExp(escaped, "i").test(targetBlob);
+        });
       });
     });
   }, [rows, columns, searchQuery, decodeHtmlEntities]);
@@ -130,21 +156,21 @@ export const BulkApplySourceModal: React.FC<BulkApplySourceModalProps> = ({
       </div>
 
       <div className="flex-1 overflow-auto p-4 bg-gray-50/50">
-        <div className="bg-white border text-left border-gray-200 rounded min-w-full inline-block align-middle">
-          <table className="min-w-full sticky table-auto">
-            <thead className="sticky top-0 bg-gray-100 z-10 shadow-sm">
+        <div className="bg-white border rounded min-w-full inline-block align-middle overflow-hidden border-[length:medium] border-[#e0e0e0]">
+          <table className="border-separate border-spacing-0 w-full text-[14px]">
+            <thead className="sticky top-0 bg-[#f3f3f3] z-10 shadow-sm text-[14px]">
               <tr>
-                <th className="p-3 w-12 text-center border-b border-r border-gray-200">
+                <th className="sticky top-0 z-20 text-[14px] font-bold text-[#2f3d49] p-1.5 border-r-[length:medium] border-b-[length:medium] border-[#e0e0e0] bg-[#f3f3f3] text-center w-12">
                   <input
                     type="checkbox"
                     checked={areAllSelected}
                     onChange={handleToggleAll}
                     disabled={filteredRows.length === 0}
-                    className="w-4 h-4 cursor-pointer"
+                    className="w-4 h-4 cursor-pointer align-middle"
                   />
                 </th>
                 {columns.filter(col => !col.archived).map((col) => (
-                  <th key={col.key} className="p-3 max-w-[200px] border-b border-r border-gray-200 font-semibold text-gray-700 text-[14px]">
+                  <th key={col.key} className="sticky top-0 z-20 text-[14px] font-bold text-[#2f3d49] p-1.5 border-r-[length:medium] border-b-[length:medium] border-[#e0e0e0] bg-[#f3f3f3] text-left max-w-[200px]">
                     {col.name}
                   </th>
                 ))}
@@ -158,23 +184,23 @@ export const BulkApplySourceModal: React.FC<BulkApplySourceModalProps> = ({
                 return (
                   <tr
                     key={row.id}
-                    className={`border-b border-gray-100 hover:bg-blue-50 cursor-pointer transition-colors ${isSelected ? "bg-blue-50/50" : ""}`}
+                    className={`hover:bg-blue-50 cursor-pointer transition-colors ${isSelected ? "bg-blue-50/50" : ""}`}
                     onClick={() => handleToggleRow(String(row.id))}
                   >
-                    <td className="p-2 text-center border-r border-gray-200">
+                    <td className="p-1.5 border-r-[length:medium] border-b-[length:medium] border-[#e0e0e0] bg-white overflow-hidden text-center">
                       <input
                         type="checkbox"
                         checked={isSelected}
                         onChange={(e) => {
                           handleToggleRow(String(row.id), e as any);
                         }}
-                        className="w-4 h-4 cursor-pointer"
+                        className="w-4 h-4 cursor-pointer align-middle"
                       />
                     </td>
                     {columns.filter(col => !col.archived).map((col) => {
                       if (col.type === "image") {
                         return (
-                          <td key={col.key} className="p-2 border-r border-gray-200 text-center min-w-[50px]">
+                          <td key={col.key} className="p-1.5 border-r-[length:medium] border-b-[length:medium] border-[#e0e0e0] bg-white overflow-hidden text-center min-w-[50px]">
                             {row[col.key] && (
                               <img src={getImageUrl(row[col.key])} alt="" className="w-10 h-10 object-contain mx-auto rounded" />
                             )}
@@ -184,7 +210,7 @@ export const BulkApplySourceModal: React.FC<BulkApplySourceModalProps> = ({
                       
                       if (col.key === context.colKey) {
                         return (
-                          <td key={col.key} className="p-2 border-r border-gray-200 min-w-[150px] max-w-[300px]">
+                          <td key={col.key} className="p-1.5 border-r-[length:medium] border-b-[length:medium] border-[#e0e0e0] bg-white overflow-hidden min-w-[150px] max-w-[300px]">
                             <div className="flex flex-wrap gap-1">
                                {currentSources.length > 0 ? (
                                   currentSources.map((src: any, sIdx: number) => (
@@ -201,7 +227,7 @@ export const BulkApplySourceModal: React.FC<BulkApplySourceModalProps> = ({
                       }
 
                       return (
-                        <td key={col.key} className="p-2 border-r border-gray-200 text-sm font-medium text-gray-700 min-w-[100px] max-w-[200px] truncate">
+                        <td key={col.key} className="p-1.5 border-r-[length:medium] border-b-[length:medium] border-[#e0e0e0] bg-white overflow-hidden text-sm font-medium text-gray-700 min-w-[100px] max-w-[200px] truncate">
                           {decodeHtmlEntities(String(row[col.key] || ""))}
                         </td>
                       );
@@ -211,7 +237,7 @@ export const BulkApplySourceModal: React.FC<BulkApplySourceModalProps> = ({
               })}
               {filteredRows.length === 0 && (
                 <tr>
-                  <td colSpan={columns.filter(col => !col.archived).length + 1} className="p-8 text-center text-gray-500 italic">
+                  <td colSpan={columns.filter(col => !col.archived).length + 1} className="p-8 text-center text-gray-500 italic border-b-[length:medium] border-[#e0e0e0]">
                     No rows match your search.
                   </td>
                 </tr>
