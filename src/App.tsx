@@ -35,6 +35,7 @@ import { ToastProvider, useToast } from "./components/ToastProvider";
 import { CopyPopupNotification } from "./components/CopyPopupNotification";
 import { CreatePageModal } from "./components/CreatePageModal";
 import { AddRowModal } from "./components/AddRowModal";
+import { BulkApplySourceModal } from "./components/BulkApplySourceModal";
 import { ActivePageSettingsModal } from "./components/ActivePageSettingsModal";
 import { RenamePageModal } from "./components/RenamePageModal";
 import { CreateColumnModal } from "./components/CreateColumnModal";
@@ -856,11 +857,13 @@ function AppContent() {
     excelExport: false,
     globalCopyBoxesSettings: false,
     rowNoResize: false,
+    bulkApplySource: false,
   });
 
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
   const [editingPageName, setEditingPageName] = useState<string | null>(null);
   const [editingColumn, setEditingColumn] = useState<Column | null>(null);
+  const [bulkApplyContext, setBulkApplyContext] = useState<{pageName: string, colKey: string, sourceName: string, sourceColor: string} | null>(null);
   const [confirmationModal, setConfirmationModal] = useState<{
     isOpen: boolean;
     title?: string;
@@ -991,6 +994,9 @@ function AppContent() {
       reorderSearchBars: false,
       excelImport: false,
       excelExport: false,
+      globalCopyBoxesSettings: false,
+      rowNoResize: false,
+      bulkApplySource: false,
     });
     setEditingRowId(null);
     setEditingPageName(null);
@@ -1877,10 +1883,20 @@ function AppContent() {
   };
 
   const handleApplySourceToAll = async (pageName: string, colKey: string, sourceName: string, sourceColor: string) => {
+    setBulkApplyContext({ pageName, colKey, sourceName, sourceColor });
+    toggleModal("bulkApplySource", true);
+  };
+
+  const handleConfirmBulkApply = async (selectedRowIds: Set<string>) => {
+    if (!bulkApplyContext) return;
+    const { pageName, colKey, sourceName, sourceColor } = bulkApplyContext;
+
     try {
       const rows = state.pageRows[pageName] || [];
       let hasChanges = false;
       const updatedRows = rows.map(r => {
+        if (!selectedRowIds.has(String(r.id))) return r;
+        
         const arr = parseMultiSource(r[colKey]);
         if (!arr.find((x: any) => x.source === sourceName)) {
           arr.push({ source: sourceName, qty: 0, color: sourceColor });
@@ -1891,7 +1907,8 @@ function AppContent() {
       });
 
       if (!hasChanges) {
-        toast(`"${sourceName}" is already present in all rows.`);
+        toast(`"${sourceName}" is already present in all selected rows.`);
+        toggleModal("bulkApplySource", false);
         return;
       }
 
@@ -1910,10 +1927,11 @@ function AppContent() {
           [pageName]: updatedRows,
         },
       }));
-      
-      toast(`Added "${sourceName}" to all rows!`);
+      toast(`Successfully applied source to ${selectedRowIds.size} rows`);
+      toggleModal("bulkApplySource", false);
     } catch (err: any) {
-      toast("Error applying source to all rows: " + err.message, {
+      console.error(err);
+      toast("Error applying source to selected rows: " + err.message, {
         style: { background: "red", color: "white" },
       });
     }
@@ -4339,6 +4357,17 @@ function AppContent() {
         onClose={closeAllModals}
         onCreate={handleCreatePage}
         existingPages={state.pages}
+      />
+
+      <BulkApplySourceModal
+        isOpen={modals.bulkApplySource}
+        onClose={closeAllModals}
+        rows={state.pageRows[bulkApplyContext?.pageName || state.activePage] || []}
+        columns={state.pageConfigs[bulkApplyContext?.pageName || state.activePage]?.columns || []}
+        context={bulkApplyContext}
+        onConfirm={handleConfirmBulkApply}
+        decodeHtmlEntities={decodeHtmlEntities}
+        parseMultiSource={parseMultiSource}
       />
 
       <AddRowModal
