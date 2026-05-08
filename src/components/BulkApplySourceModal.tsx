@@ -190,17 +190,18 @@ export const BulkApplySourceModal: React.FC<BulkApplySourceModalProps> = ({
       noScroll={true}
     >
       <div className="flex flex-col h-[85vh] p-4">
-        <div className="flex gap-4 mb-4 shrink-0 items-center justify-between">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-2 top-2.5 text-gray-400" size={16} />
-            <Input
-              className="pl-8"
+        <div className="p-4 border-b border-gray-200 bg-gray-50 flex gap-3 items-center w-full">
+          <div className="relative flex-1 w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <input
+              type="text"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               placeholder="Filter rows..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <Button
               variant="outline"
               onClick={() => {
