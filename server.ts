@@ -319,53 +319,6 @@ const settingsSchema = new mongoose.Schema({
 const AppSettings = mongoose.model('AppSettings', settingsSchema);
 
 // API Routes
-function embedImagesInRows(rows: any[]) {
-  return rows.map(row => {
-    const newRow = { ...row };
-    for (const key in newRow) {
-      let val = newRow[key];
-      let isObject = false;
-      if (typeof val === 'object' && val !== null && typeof val.data === 'string') {
-        val = val.data;
-        isObject = true;
-      }
-
-      if (typeof val === 'string') {
-        let filename = val;
-        let shouldEmbed = false;
-
-        if (filename.includes('/uploads/')) {
-          filename = filename.split('/uploads/').pop() || filename;
-          filename = filename.split('?')[0]; // remove query string
-          shouldEmbed = true;
-        } else if (!/^https?:\/\//i.test(filename)) {
-          shouldEmbed = true;
-        }
-        
-        if (shouldEmbed && /\.(png|jpe?g|gif|webp|avif|tiff)$/i.test(filename)) {
-          try {
-            const filepath = path.join(UPLOADS_DIR, filename);
-            if (fs.existsSync(filepath)) {
-              const ext = path.extname(filename).substring(1).toLowerCase();
-              const mimeType = ext === 'jpg' ? 'jpeg' : ext;
-              const fileData = fs.readFileSync(filepath, { encoding: 'base64' });
-              const result = `data:image/${mimeType};base64,${fileData}`;
-              newRow[key] = isObject ? { ...newRow[key], data: result } : result;
-            } else {
-              newRow[key] = isObject ? { ...newRow[key], data: val } : val;
-            }
-          } catch (e) {
-            console.error(`Failed to convert image ${val} to base64:`, e);
-            newRow[key] = isObject ? { ...newRow[key], data: val } : val;
-          }
-        } else {
-           newRow[key] = isObject ? { ...newRow[key], data: val } : val;
-        }
-      }
-    }
-    return newRow;
-  });
-}
 
 const getFormattedDate = () => {
   const now = new Date();
@@ -505,7 +458,7 @@ app.get('/api/export/page/:name', async (req, res) => {
       pageData = {
         name: page.name,
         config: page.config,
-        rows: embedImagesInRows(rows)
+        rows: rows
       };
     } else {
       const db = await getLocalDB();
@@ -516,7 +469,7 @@ app.get('/api/export/page/:name', async (req, res) => {
       pageData = {
         name: page.name,
         config: page.config,
-        rows: embedImagesInRows(page.rows || [])
+        rows: page.rows || []
       };
     }
 
@@ -549,11 +502,6 @@ app.get('/api/export', async (req, res) => {
         if (!pageRows[r.pageName]) pageRows[r.pageName] = [];
         pageRows[r.pageName].push(r.data);
       });
-
-      // Embed images
-      for (const pageName in pageRows) {
-        pageRows[pageName] = embedImagesInRows(pageRows[pageName]);
-      }
       
       state = {
         pages: pages.map(p => p.name),
@@ -566,12 +514,6 @@ app.get('/api/export', async (req, res) => {
       };
     } else {
       state = await getLocalDB();
-      if (state.pages) {
-        state.pages = state.pages.map((page: any) => ({
-          ...page,
-          rows: embedImagesInRows(page.rows || [])
-        }));
-      }
     }
 
     const date = new Date();
@@ -1310,8 +1252,17 @@ app.post('/api/import-zip', upload.single('backup'), async (req, res) => {
       }
     }
 
-    // We do NOT process base64 images here because they are already extracted physical files.
-    const processedPageRows = newState.pageRows || {};
+    const processedPageRows: Record<string, any[]> = {};
+    const globalImageCache = new Map<string, Promise<string>>();
+    for (const pageName in newState.pageRows) {
+      if (Array.isArray(newState.pageRows[pageName])) {
+        processedPageRows[pageName] = await Promise.all(
+          newState.pageRows[pageName].map((row: any) => processRowImages(row, false, globalImageCache))
+        );
+      } else {
+        processedPageRows[pageName] = [];
+      }
+    }
 
     if (isUsingMongoDB) {
       if (isSinglePage) {
