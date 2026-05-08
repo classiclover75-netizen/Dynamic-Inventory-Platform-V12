@@ -108,7 +108,7 @@ export const ImagePreviewModal = React.memo(({
   };
 
   const handleZoomIn = () => setScale(prev => Math.min(prev + 0.5, 10));
-  const handleZoomOut = () => setScale(prev => Math.max(prev - 0.5, 0.5));
+  const handleZoomOut = () => setScale(prev => Math.max(1, prev - 0.5));
   const handleReset = () => {
     setScale(1);
     setPosition({ x: 0, y: 0 });
@@ -118,7 +118,7 @@ export const ImagePreviewModal = React.memo(({
     e.preventDefault();
     const zoomSpeed = 0.1;
     const delta = e.deltaY > 0 ? -zoomSpeed : zoomSpeed;
-    const newScale = Math.min(Math.max(scale + delta, 0.5), 10);
+    const newScale = Math.min(Math.max(scale + delta, 1), 10);
     
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
