@@ -611,7 +611,7 @@ function AppContent() {
   }, []);
 
   const handleExportData = () => {
-    window.open("/api/export-zip");
+    window.open(`/api/export-zip?pageName=${encodeURIComponent(state.activePage)}`);
     toast("Export started. Check your downloads.");
   };
 
