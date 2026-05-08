@@ -27,6 +27,7 @@ interface BulkApplySourceModalProps {
   onConfirm: (selectedRowIds: Set<string>) => void;
   decodeHtmlEntities: (html: string) => string;
   parseMultiSource: (val: any) => any[];
+  getImageUrl: (val: any) => string;
 }
 
 export const BulkApplySourceModal: React.FC<BulkApplySourceModalProps> = ({
@@ -38,6 +39,7 @@ export const BulkApplySourceModal: React.FC<BulkApplySourceModalProps> = ({
   onConfirm,
   decodeHtmlEntities,
   parseMultiSource,
+  getImageUrl,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(new Set());
@@ -57,10 +59,8 @@ export const BulkApplySourceModal: React.FC<BulkApplySourceModalProps> = ({
     return rows.filter((row) => {
       return columns.some((col) => {
         const val = row[col.key];
-        if (typeof val === "string") {
-          return decodeHtmlEntities(val).toLowerCase().includes(lowerQuery);
-        }
-        return false;
+        const stringVal = Array.isArray(val) ? JSON.stringify(val) : String(val || "");
+        return decodeHtmlEntities(stringVal).toLowerCase().includes(lowerQuery);
       });
     });
   }, [rows, columns, searchQuery, decodeHtmlEntities]);
@@ -176,7 +176,7 @@ export const BulkApplySourceModal: React.FC<BulkApplySourceModalProps> = ({
                         return (
                           <td key={col.key} className="p-2 border-r border-gray-200 text-center min-w-[50px]">
                             {row[col.key] && (
-                              <img src={row[col.key]} alt="" className="w-10 h-10 object-contain mx-auto rounded" />
+                              <img src={getImageUrl(row[col.key])} alt="" className="w-10 h-10 object-contain mx-auto rounded" />
                             )}
                           </td>
                         );

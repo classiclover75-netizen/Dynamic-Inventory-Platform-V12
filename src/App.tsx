@@ -4368,6 +4368,7 @@ function AppContent() {
         onConfirm={handleConfirmBulkApply}
         decodeHtmlEntities={decodeHtmlEntities}
         parseMultiSource={parseMultiSource}
+        getImageUrl={getImageUrl}
       />
 
       <AddRowModal
