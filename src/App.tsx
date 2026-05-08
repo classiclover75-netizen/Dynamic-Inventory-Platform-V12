@@ -611,8 +611,8 @@ function AppContent() {
   }, []);
 
   const handleExportData = () => {
-    window.open(`/api/export-zip?pageName=${encodeURIComponent(state.activePage)}`);
-    toast("Export started. Check your downloads.");
+    window.open("/api/export-zip");
+    toast("Full backup export started. Check your downloads.");
   };
 
   const handleImportPageData = async (file: File) => {

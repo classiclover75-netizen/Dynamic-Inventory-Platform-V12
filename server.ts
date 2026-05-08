@@ -642,7 +642,8 @@ app.get('/api/export-zip', async (req, res) => {
     }
 
     res.setHeader('Content-Type', 'application/zip');
-    const filenamePrefix = requestedPageName ? `export_${requestedPageName.replace(/[^a-zA-Z0-9_\-]/g, '_')}_` : 'full_backup_';
+    const cleanRequestedName = requestedPageName ? requestedPageName.replace(/[^a-zA-Z0-9_\- ]/g, '').trim() : '';
+    const filenamePrefix = requestedPageName ? `${cleanRequestedName}_backup_` : 'full_inventory_backup_';
     res.setHeader('Content-Disposition', `attachment; filename=${filenamePrefix}${getFormattedDate()}.zip`);
     
     const archive = archiver('zip', {
@@ -665,14 +666,21 @@ app.get('/api/export-zip', async (req, res) => {
       archive.append(JSON.stringify(pageData, null, 2), { name: `${cleanFileName}.json` });
     }
 
-    // Still append state if global, or perhaps no? "Instead of naming the file data.json, name each file as [Actual_Page_Name].json"
+    // Always append state to data.json so the backup can be imported easily
     if (!requestedPageName) {
-       // Only append the old global data if instructed, but prompt says "Instead of naming the file data.json, name each file..."
-       // Wait! If they only have individual JSON, import-zip will fail.
-       // Let's also include settings in a separate global file if it's a full export.
-       // Actually, the prompt says:
-       // "If no pageName is passed, the system should still allow a full global export of all pages, each named after its page title."
-       // It didn't mention saving settings or data.json for full backup. I will follow strictly.
+      archive.append(JSON.stringify(state, null, 2), { name: 'data.json' });
+    } else {
+      // For specific page exports, we bundle all related pages into data.json for the importer
+      const specificState = {
+         pages: pagesToExport,
+         pageConfigs: {},
+         pageRows: {}
+      } as any;
+      for (const pName of pagesToExport) {
+         specificState.pageConfigs[pName] = state.pageConfigs?.[pName] || {};
+         specificState.pageRows[pName] = state.pageRows?.[pName] || [];
+      }
+      archive.append(JSON.stringify(specificState, null, 2), { name: 'data.json' });
     }
 
     archive.directory(UPLOADS_DIR, 'uploads');
@@ -681,48 +689,6 @@ app.get('/api/export-zip', async (req, res) => {
   } catch (err) {
     console.error('Export zip error:', err);
     res.status(500).json({ error: 'Failed to export data as zip' });
-  }
-});
-
-app.get('/api/export-zip/page/:name', async (req, res) => {
-  try {
-    const { name } = req.params;
-    let pageData: any = null;
-
-    if (isUsingMongoDB) {
-      const page = await Page.findOne({ name });
-      if (!page) return res.status(404).json({ error: 'Page not found' });
-      const rows = await PageRow.find({ pageName: name });
-      pageData = {
-        name: page.name,
-        config: page.config,
-        rows: rows.map(r => r.data)
-      };
-    } else {
-      const db = await getLocalDB();
-      const page = db.pages.find((p: any) => p.name === name);
-      if (!page) return res.status(404).json({ error: 'Page not found' });
-      pageData = {
-        name: page.name,
-        config: page.config,
-        rows: page.rows || []
-      };
-    }
-
-    res.setHeader('Content-Type', 'application/zip');
-    res.setHeader('Content-Disposition', `attachment; filename=page_backup_${name}_${getFormattedDate()}.zip`);
-    
-    const archive = archiver('zip', { zlib: { level: 9 } });
-    archive.on('error', (err) => { throw err; });
-    archive.pipe(res);
-
-    archive.append(JSON.stringify(pageData, null, 2), { name: 'data.json' });
-    archive.directory(UPLOADS_DIR, 'uploads');
-
-    await archive.finalize();
-  } catch (err) {
-    console.error('Export page zip error:', err);
-    res.status(500).json({ error: 'Failed to export page as zip' });
   }
 });
 

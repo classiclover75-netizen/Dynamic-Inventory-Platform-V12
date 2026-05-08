@@ -370,7 +370,7 @@ export const ActivePageSettingsModal = React.memo(({
         <div className="flex justify-between items-center mt-2 mb-4 gap-2">
           <Button variant="outline" className="flex-1 justify-center" onClick={() => fileInputRef.current?.click()}>📂 Import Page (JSON/ZIP)</Button>
           <Button variant="outline" className="flex-1 justify-center border-blue-600 text-blue-600 hover:bg-blue-50" onClick={() => {
-            window.open("/api/export-zip/page/" + encodeURIComponent(activePage));
+            window.open("/api/export-zip?pageName=" + encodeURIComponent(activePage));
           }}>
             📂 Export Page (ZIP Archive)
           </Button>
