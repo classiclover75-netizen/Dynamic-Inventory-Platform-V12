@@ -131,7 +131,7 @@ export const BulkApplySourceModal: React.FC<BulkApplySourceModalProps> = ({
 
       <div className="flex-1 overflow-auto p-4 bg-gray-50/50">
         <div className="bg-white border text-left border-gray-200 rounded min-w-full inline-block align-middle">
-          <table className="min-w-full sticky table-fixed" style={{ width: "100%" }}>
+          <table className="min-w-full sticky table-auto">
             <thead className="sticky top-0 bg-gray-100 z-10 shadow-sm">
               <tr>
                 <th className="p-3 w-12 text-center border-b border-r border-gray-200">
@@ -143,12 +143,11 @@ export const BulkApplySourceModal: React.FC<BulkApplySourceModalProps> = ({
                     className="w-4 h-4 cursor-pointer"
                   />
                 </th>
-                <th className="p-3 w-32 border-b border-r border-gray-200 font-semibold text-gray-700 text-[14px]">
-                  Row ID
-                </th>
-                <th className="p-3 border-b border-gray-200 font-semibold text-gray-700 text-[14px]">
-                  Current {targetCol?.name || "Sources"}
-                </th>
+                {columns.filter(col => !col.archived).map((col) => (
+                  <th key={col.key} className="p-3 max-w-[200px] border-b border-r border-gray-200 font-semibold text-gray-700 text-[14px]">
+                    {col.name}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
@@ -172,28 +171,47 @@ export const BulkApplySourceModal: React.FC<BulkApplySourceModalProps> = ({
                         className="w-4 h-4 cursor-pointer"
                       />
                     </td>
-                    <td className="p-2 border-r border-gray-200 text-sm font-medium text-gray-700">
-                      {row.sr || row.id}
-                    </td>
-                    <td className="p-2">
-                       <div className="flex flex-wrap gap-1">
-                          {currentSources.length > 0 ? (
-                             currentSources.map((src: any, sIdx: number) => (
-                                <span key={sIdx} className={`px-1.5 py-0.5 rounded text-[12px] font-bold ${src.color}`}>
-                                   {src.source}: {src.qty}
-                                </span>
-                             ))
-                          ) : (
-                             <span className="text-gray-400 italic text-xs">No sources</span>
-                          )}
-                       </div>
-                    </td>
+                    {columns.filter(col => !col.archived).map((col) => {
+                      if (col.type === "image") {
+                        return (
+                          <td key={col.key} className="p-2 border-r border-gray-200 text-center min-w-[50px]">
+                            {row[col.key] && (
+                              <img src={row[col.key]} alt="" className="w-10 h-10 object-contain mx-auto rounded" />
+                            )}
+                          </td>
+                        );
+                      }
+                      
+                      if (col.key === context.colKey) {
+                        return (
+                          <td key={col.key} className="p-2 border-r border-gray-200 min-w-[150px] max-w-[300px]">
+                            <div className="flex flex-wrap gap-1">
+                               {currentSources.length > 0 ? (
+                                  currentSources.map((src: any, sIdx: number) => (
+                                     <span key={sIdx} className={`px-1.5 py-0.5 rounded text-[12px] font-bold ${src.color}`}>
+                                        {src.source}: {src.qty}
+                                     </span>
+                                  ))
+                               ) : (
+                                  <span className="text-gray-400 italic text-xs">No sources</span>
+                               )}
+                            </div>
+                          </td>
+                        );
+                      }
+
+                      return (
+                        <td key={col.key} className="p-2 border-r border-gray-200 text-sm font-medium text-gray-700 min-w-[100px] max-w-[200px] truncate">
+                          {decodeHtmlEntities(String(row[col.key] || ""))}
+                        </td>
+                      );
+                    })}
                   </tr>
                 );
               })}
               {filteredRows.length === 0 && (
                 <tr>
-                  <td colSpan={3} className="p-8 text-center text-gray-500 italic">
+                  <td colSpan={columns.filter(col => !col.archived).length + 1} className="p-8 text-center text-gray-500 italic">
                     No rows match your search.
                   </td>
                 </tr>
