@@ -55,6 +55,22 @@ export const BulkApplySourceModal: React.FC<BulkApplySourceModalProps> = ({
 
   const deferredSearchQuery = useDeferredValue(searchQuery);
 
+  const getCellValue = (row: RowData, col: Column) => {
+    if (col.key === 'sr') {
+      return rows.findIndex(r => r.id === row.id) + 1;
+    }
+    if (col.key === 'remaining_qty') {
+      const total = parseFloat(String(row.total_qty || 0)) || 0;
+      const saleCols = columns.filter(c => c.type === 'sale_tracker');
+      const totalSales = saleCols.reduce((sum, c) => sum + (parseFloat(String(row[c.key] || 0)) || 0), 0);
+      return String(total - totalSales);
+    }
+    if (col.type === 'sale_tracker') {
+      return String(row[col.key] || '0');
+    }
+    return row[col.key];
+  };
+
   const highlightText = (text: string, query: string) => {
     const cleanText = text
       ? String(text)
@@ -109,7 +125,7 @@ export const BulkApplySourceModal: React.FC<BulkApplySourceModalProps> = ({
     return rows.filter((row) => {
       const colData = columns.map((col) => {
         if (col.key === "sr" || col.type === "image" || col.type === "file") return null;
-        const val = row[col.key];
+        const val = getCellValue(row, col);
         const strVal = Array.isArray(val) ? val.map((v: any) => (typeof v === 'object' ? JSON.stringify(v) : v)).join(" ") : val !== null && val !== undefined ? String(val) : "";
         const cleanVal = decodeHtmlEntities(strVal).replace(/<!--[\s\S]*?-->/g, "").replace(/<br\s*\/?>/gi, " ").replace(/&nbsp;/gi, " ").toLowerCase();
         return { name: col.name.toLowerCase(), val: cleanVal };
@@ -240,10 +256,10 @@ export const BulkApplySourceModal: React.FC<BulkApplySourceModalProps> = ({
                     className="w-4 h-4 cursor-pointer align-middle"
                   />
                 </th>
-                {columns.filter(col => !col.archived).map((col) => (
+                {columns.filter(col => !col.archived).map((col, i) => (
                   <th key={col.key} className="p-2 border text-left">
-                    <div className="flex items-center gap-1">
-                      {col.name}
+                    <div className="flex items-center gap-1 font-bold whitespace-nowrap">
+                      {i + 1}. {col.name} {col.archived || col.key === 'sr' || col.key === 'remaining_qty' ? '🔒' : ''}
                     </div>
                   </th>
                 ))}
@@ -274,11 +290,13 @@ export const BulkApplySourceModal: React.FC<BulkApplySourceModalProps> = ({
                       />
                     </td>
                     {columns.filter(col => !col.archived).map((c) => {
+                      const rawVal = getCellValue(row, c);
+
                       if (c.type === "image") {
                         return (
                           <td key={c.key} className="p-2 border whitespace-pre-wrap break-words min-w-[50px]">
-                            {row[c.key] && (
-                              <img src={getImageUrl(row[c.key])} alt="" className="w-10 h-10 object-contain mx-auto rounded" />
+                            {rawVal && (
+                              <img src={getImageUrl(rawVal)} alt="" className="w-10 h-10 object-contain mx-auto rounded" />
                             )}
                           </td>
                         );
@@ -305,7 +323,7 @@ export const BulkApplySourceModal: React.FC<BulkApplySourceModalProps> = ({
                       return (
                         <td key={c.key} className="p-2 border whitespace-pre-wrap break-words min-w-[150px]">
                           {highlightText(
-                            decodeHtmlEntities(String(row[c.key] || "")),
+                            decodeHtmlEntities(String(rawVal || "")),
                             deferredSearchQuery
                           )}
                         </td>
