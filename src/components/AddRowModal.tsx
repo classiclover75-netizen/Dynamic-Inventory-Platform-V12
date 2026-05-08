@@ -191,6 +191,7 @@ export const AddRowModal = React.memo(
     editingRow,
     editingRowIndex,
     activePage,
+    allRows,
     onToggleMagicPasteColumn,
     onApplySourceToAll,
     setConfirmationModal,
@@ -206,6 +207,7 @@ export const AddRowModal = React.memo(
     editingRow: RowData | null;
     editingRowIndex?: number;
     activePage: string;
+    allRows?: RowData[];
     onToggleMagicPasteColumn?: (colKey: string) => void;
     onApplySourceToAll?: (page: string, col: string, name: string, color: string) => void;
     setConfirmationModal: (
@@ -842,9 +844,29 @@ export const AddRowModal = React.memo(
                                     className="h-7 text-[10px] px-2 py-0 shrink-0"
                                     onClick={() => {
                                       if (newSourceInput.source) {
+                                        let existingColor = null;
+                                        if (allRows) {
+                                          for (const r of allRows) {
+                                            try {
+                                              const val = r[col.key]; // col.key is the active column being edited
+                                              if (!val) continue;
+                                              const arr = typeof val === 'string' ? JSON.parse(val) : val;
+                                              if (Array.isArray(arr)) {
+                                                const match = arr.find((item: any) => item.source?.trim().toLowerCase() === newSourceInput.source.trim().toLowerCase());
+                                                if (match && match.color) {
+                                                  existingColor = match.color;
+                                                  break;
+                                                }
+                                              }
+                                            } catch(e) {} // ignore parsing errors for flat values
+                                          }
+                                        }
+
                                         const usedColors = currentSources.map((item: any) => item.color);
                                         const availableColors = RANDOM_COLORS.filter(c => !usedColors.includes(c));
-                                        const newColor = availableColors.length > 0 ? availableColors[Math.floor(Math.random() * availableColors.length)] : RANDOM_COLORS[Math.floor(Math.random() * RANDOM_COLORS.length)];
+                                        const randomColor = availableColors.length > 0 ? availableColors[Math.floor(Math.random() * availableColors.length)] : RANDOM_COLORS[Math.floor(Math.random() * RANDOM_COLORS.length)];
+                                        const newColor = existingColor || randomColor;
+                                        
                                         const updated = [
                                           ...currentSources,
                                           {

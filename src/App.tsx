@@ -4408,6 +4408,7 @@ function AppContent() {
         activePage={
           previewContext?.pageName || editingPageName || state.activePage
         }
+        allRows={state.pageRows[previewContext?.pageName || editingPageName || state.activePage] || []}
         onToggleMagicPasteColumn={handleToggleMagicPasteColumn}
         setConfirmationModal={setConfirmationModal}
         getImageUrl={getImageUrl}
